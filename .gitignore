@@ -72,3 +72,15 @@ dump.rdb
 /data
 /etl
 taskfull
+# IDE/venv
+.idea/
+venv/
+__pycache__/
+*.pyc
+
+# IDE/venv
+.idea/
+venv/
+__pycache__/
+*.pyc
+
