@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  auth_service:
+    build: ./auth_service
+    env_file:
+      - ./auth_service/.env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+
+  content_service:
+    build: ./content_service
+    env_file:
+      - ./content_service/.env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8001:8000"
+
+  admin_panel:
+    build: ./admin_panel
+    env_file:
+      - ./admin_panel/.env
+    depends_on:
+      - postgres
+    ports:
+      - "8002:8000"
+
+  postgres:
+    image: postgres:16
+    ...
+
+  redis:
+    image: redis:7
+    ...
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    ports:
+      - "16686:16686" # UI
+      - "4318:4318"   # OTLP
+
+volumes:
+  postgres_data:
+  redis_data:
