@@ -1,0 +1,31 @@
+# tests/Dockerfile.test
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# ---- системные зависимости (ставятся один раз и кешируются) ----
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    postgresql-client \
+    netcat-openbsd \
+ && rm -rf /var/lib/apt/lists/*
+
+# ---- зависимости Python ----
+# используем кеш pip, чтобы не качать пакеты заново
+ENV PIP_CACHE_DIR=/root/.cache/pip
+ENV PIP_PROGRESS_BAR=off
+
+COPY requirements.txt .
+
+# ставим зависимости с замером времени
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir pytest pytest-asyncio
+
+# ---- копируем код ----
+COPY . .
+
+WORKDIR /app
+
+ENTRYPOINT ["/app/tests/entrypoint.test.sh"]
