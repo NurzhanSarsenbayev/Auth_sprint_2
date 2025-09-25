@@ -1,0 +1,80 @@
+services:
+  api:
+    build:
+      context: ../fastapi_practice
+      dockerfile: Dockerfile
+    container_name: tests_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../fastapi_practice/src:/app/src
+    env_file:
+      - ../.env
+    depends_on:
+      - redis
+      - elasticsearch
+    networks:
+      - test_net
+
+  redis:
+    image: redis:7.2
+    container_name: tests_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - test_net
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+    container_name: tests_elastic
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - test_net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9200/_cluster/health" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: functional_tests
+    depends_on:
+      api:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - REDIS_HOST=redis
+      - API_URL=http://api:8000
+      - PYTHONPATH=/app
+    networks:
+      - test_net
+    command: ["pytest", "-v", "functional/src"]
+
+volumes:
+  redis_data:
+  es_data:
+
+networks:
+  test_net:
