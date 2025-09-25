@@ -1,9 +1,9 @@
 version: "3.9"
+name: content_standalone
 
 services:
   api:
     build: fastapi_practice
-    container_name: fastapi_api
     ports:
       - "8000:8000"
     volumes:
@@ -18,7 +18,6 @@ services:
 
   redis:
     image: redis:7.2
-    container_name: fastapi_redis
     ports:
       - "6380:6379"
     volumes:
@@ -28,7 +27,6 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
-    container_name: fastapi_elastic
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -58,18 +56,17 @@ services:
 #    networks:
 #      - fastapi_net
 
-  etl:
-    build:
-      context: ./fastapi_practice
-    container_name: fastapi_etl
-    command: python etl/run_etl.py
-    volumes:
-      - ./etl:/app/etl
-      - ./data:/app/data
-    depends_on:
-      - elasticsearch
-    networks:
-      - fastapi_net
+#  etl:
+#    build:
+#      context: ./fastapi_practice
+#    command: python etl/run_etl.py
+#    volumes:
+#      - ./etl:/app/etl
+#      - ./data:/app/data
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - fastapi_net
 
 volumes:
   es_data:
