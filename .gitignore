@@ -1,158 +1,74 @@
---- a/.gitignore
-+++ b/.gitignore
-@@
--# Python
--__pycache__/
--*.py[cod]
--*.pyo
--*.pyd
--*.pyc
--*.pdb
--*.egg-info/
--*.egg
--*.env
--*.env.test
--*.venv
--env/
--venv/
--ENV/
--env.bak/
--venv.bak/
--*.swp
--
--# Virtual environments
--.venv/
--venv/
--env/
--ENV/
--
--# IDEs
--.idea/
--.vscode/
--*.sublime-project
--*.sublime-workspace
--
--# Logs
--*.log
--
--# OS files
--.DS_Store
--Thumbs.db
--
--# Docker
--docker-compose.override.yml
--*.dockerignore
--*.env
--*.pid
--*.sock
--
--# Elasticsearch
--
--.es/
--
--
--# Pytest cache
--.pytest_cache/
--.coverage
--nosetests.xml
--coverage.xml
--*.cover
--
--# MyPy cache
--.mypy_cache/
--.dmypy.json
--
--# Redis dump / temp files
--dump.rdb
--*.rdb
--*.aof
--
--# Misc
--*.bak
--*.tmp
--
--
--/data
--/etl
--taskfull
--# IDE/venv
--.idea/
--venv/
--__pycache__/
--*.pyc
--
--# IDE/venv
--.idea/
--venv/
--__pycache__/
--*.pyc
-+### --- Python ---
-+__pycache__/
-+*.py[cod]
-+*.pyo
-+*.pyd
-+*.pdb
-+*.egg-info/
-+*.egg
-+*.swp
-+
-+### --- Virtual environments ---
-+.venv/
-+venv/
-+env/
-+ENV/
-+env.bak/
-+venv.bak/
-+
-+### --- Env files (оставляем только примеры) ---
-+.env
-+.env.*
-+!.env.example
-+!.env.test.example
-+
-+### --- IDEs ---
-+.idea/
-+.vscode/
-+*.sublime-project
-+*.sublime-workspace
-+
-+### --- Logs ---
-+*.log
-+
-+### --- OS junk ---
-+.DS_Store
-+Thumbs.db
-+
-+### --- Docker ---
-+docker-compose.override.yml
-+*.dockerignore
-+*.pid
-+*.sock
-+
-+### --- Elasticsearch ---
-+.es/
-+
-+### --- Tests / Coverage ---
-+.pytest_cache/
-+.coverage
-+nosetests.xml
-+coverage.xml
-+*.cover
-+
-+### --- MyPy ---
-+.mypy_cache/
-+.dmypy.json
-+
-+### --- Redis ---
-+dump.rdb
-+*.rdb
-+*.aof
-+
-+### --- Misc ---
-+*.bak
-+*.tmp
-+
-+### --- Project-specific ---
-+/data
-+/etl
-+taskfull
+### --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.so
+*.pyc
+
+### --- Virtual environments ---
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+### --- Env files ---
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+### --- IDEs / Editors ---
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+### --- Logs ---
+*.log
+
+### --- OS junk ---
+.DS_Store
+Thumbs.db
+
+### --- Docker ---
+docker-compose.override.yml
+*.pid
+*.sock
+
+### --- Tests / Coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+htmlcov/
+
+### --- MyPy / Type check ---
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+
+### --- Redis dumps ---
+dump.rdb
+*.rdb
+*.aof
+
+### --- Alembic cache ---
+alembic/versions/__pycache__/
+
+### --- Misc ---
+*.bak
+*.tmp
+
+### --- Project-specific ---
+/data
+/etl
+taskfull

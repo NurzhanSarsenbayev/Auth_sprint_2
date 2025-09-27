@@ -38,6 +38,9 @@ class User(Base):
     )
 
     login_history = relationship("LoginHistory", back_populates="user")
+    social_accounts = relationship("SocialAccount",
+                                   back_populates="user",
+                                   cascade="all, delete")
 
     @property
     def roles(self):

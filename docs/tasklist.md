@@ -3,15 +3,15 @@
 ---
 
 ## Auth Service
-- [ ] Добавить middleware `x-request-id`  
-- [ ] Настроить OpenTelemetry трассировку → Jaeger
-- [ ] Реализовать middleware rate limiting (Redis sliding window)
-- [ ] Добавить таблицу `social_accounts` (Alembic migration)
+- [x] Добавить middleware `x-request-id`  
+- [x] Настроить OpenTelemetry трассировку → Jaeger
+- [x] Реализовать middleware rate limiting (Redis sliding window)
+- [x] Добавить таблицу `social_accounts` (Alembic migration)
 - [ ] Реализовать OAuth:
   - [ ] Google вход
-  - [ ] Yandex или VK вход
-  - [ ] Callback-роуты `/oauth/{provider}/callback`
-- [ ] Реализовать отвязку соц.аккаунта (`unlink`)
+  - [x] Yandex или VK вход
+  - [x] Callback-роуты `/oauth/{provider}/callback`
+- [x] Реализовать отвязку соц.аккаунта (`unlink`)
 - [ ] Партиционировать таблицу:
   - [ ] `login_history` по времени (месяц RANGE)
   - [ ] (или `users` по региону/другому критерию)
@@ -23,9 +23,9 @@
   - [ ] JWKS из Auth, кэш в Redis
   - [ ] Фон-обновитель JWKS
   - [ ] Изящная деградация → `guest` если Auth/JWKS недоступен
-- [ ] Добавить middleware `x-request-id`
-- [ ] Подключить трассировку (OpenTelemetry → Jaeger)
-- [ ] (опционально) rate limiting
+- [x] Добавить middleware `x-request-id`
+- [x] Подключить трассировку (OpenTelemetry → Jaeger)
+- [x] (опционально) rate limiting
 
 ---
 

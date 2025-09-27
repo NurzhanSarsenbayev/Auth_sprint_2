@@ -1,12 +1,18 @@
 import os
 import sys
+sys.path.append("src")
 from logging.config import fileConfig
 from db.postgres import Base
 from sqlalchemy import create_engine, pool
 from alembic import context
 from core.config import settings
+from models.user import User
+from models.role import Role
+from models.user_role import UserRole
+from models.login_history import LoginHistory
+from models.social_account import SocialAccount
 
-sys.path.append("src")
+
 
 config = context.config
 fileConfig(config.config_file_name)

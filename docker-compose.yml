@@ -1,49 +1,82 @@
 version: "3.9"
+name: cinema_project
 
 services:
+  # --- Auth Service ---
   auth_service:
     build: ./auth_service
-    env_file:
-      - ./auth_service/.env
-    depends_on:
-      - postgres
-      - redis
-    ports:
-      - "8000:8000"
-
-  content_service:
-    build: ./content_service
-    env_file:
-      - ./content_service/.env
-    depends_on:
-      - postgres
-      - redis
+    container_name: auth_service
     ports:
       - "8001:8000"
-
-  admin_panel:
-    build: ./admin_panel
-    env_file:
-      - ./admin_panel/.env
     depends_on:
-      - postgres
+      - postgres_auth
+      - redis_shared
+    env_file:
+      - auth_service/.env.auth
+
+  postgres_auth:
+    image: postgres:16
+    container_name: postgres_auth
+    restart: always
+    env_file:
+      - auth_service/.env.auth
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+
+  # --- Content Service ---
+  content_service:
+    build: ./content_service
+    container_name: content_service
     ports:
       - "8002:8000"
+    volumes:
+      - ./content_service/src:/app/src
+      - ./content_service/etl:/app/etl
+      - ./content_service/data:/app/data
+    env_file:
+      - content_service/.env.content
+    depends_on:
+      - redis_shared
+      - elasticsearch
 
-  postgres:
-    image: postgres:16
-    ...
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
-  redis:
+  # --- Shared Redis ---
+  redis_shared:
     image: redis:7
-    ...
+    container_name: redis_shared
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   jaeger:
-    image: jaegertracing/all-in-one:1.55
+    image: jaegertracing/all-in-one:1.54
+    container_name: jaeger
     ports:
-      - "16686:16686" # UI
-      - "4318:4318"   # OTLP
-
+      - "16686:16686"   # UI
+      - "4318:4318"     # OTLP/HTTP traces
+      - "4317:4317"     # OTLP/gRPC (можно не использовать)
 volumes:
-  postgres_data:
+  postgres_auth_data:
+  es_data:
   redis_data:

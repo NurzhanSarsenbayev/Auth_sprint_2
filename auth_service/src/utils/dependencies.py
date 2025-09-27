@@ -6,6 +6,7 @@ import redis.asyncio as redis
 
 from db.postgres import get_session
 from db.redis_db import get_redis
+from core.oauth.providers.yandex import YandexOAuthProvider
 from repositories.user import UserRepository
 from repositories.role import RoleRepository
 from repositories.user_role import UserRoleRepository
@@ -13,6 +14,7 @@ from services.user import UserService
 from services.role import RoleService
 from services.auth import AuthService
 from services.user_role import UserRoleService
+from services.oauth import OAuthService
 from schemas.user import CurrentUserResponse
 from schemas.role import RoleResponse
 from models import User, Role
@@ -216,3 +218,14 @@ def get_current_user_with_roles(required_roles: list[str]):
         return user
 
     return dependency
+
+
+def get_oauth_service(db: AsyncSession = Depends(get_session)) -> OAuthService:
+    providers = {
+        "yandex": YandexOAuthProvider(),
+    }
+    # БД отдаём отдельно через Depends (используем в handle_callback)
+    svc = OAuthService(providers=providers)
+    # вернём кортеж, чтобы в хэндлере было и svc, и db
+    svc.db = db  # простая "инъекция" сеанса
+    return svc

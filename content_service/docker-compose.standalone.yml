@@ -9,7 +9,7 @@ services:
     volumes:
       - ./fastapi_practice/src:/app/src
     env_file:
-      - .env
+      - .env.content
     depends_on:
       - redis
       - elasticsearch

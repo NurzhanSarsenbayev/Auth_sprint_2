@@ -21,7 +21,7 @@ def create_token(data: dict, expires_delta: timedelta, token_type: str) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     jti = str(uuid.uuid4())  # уникальный ID токена
     to_encode.update({"exp": expire, "type": token_type, "jti": jti})
-
+    print(settings.jwt_secret_key)
     return jwt.encode(
         to_encode,
         settings.jwt_secret_key,
@@ -83,7 +83,7 @@ async def decode_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked"
         )
-
+    print(settings.jwt_secret_key)
     return payload
 
 

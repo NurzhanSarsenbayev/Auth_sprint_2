@@ -1,26 +1,22 @@
-# Базовый образ Python
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
     gcc \
+    netcat-openbsd \
  && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 
-# Копируем зависимости
 COPY requirements.txt .
-
-# Устанавливаем зависимости Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код проекта
 COPY src /app/src
-
-# Добавляем /app/src в PYTHONPATH
-ENV PYTHONPATH=/app/src
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8000
-
-# Запуск через uvicorn
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "src"]
+ENTRYPOINT ["/app/entrypoint.sh"]

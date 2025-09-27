@@ -10,13 +10,13 @@ services:
       - postgres
       - redis
     env_file:
-      - .env
+      - .env.auth
 
   postgres:
     image: postgres:16
     restart: always
     env_file:
-      - .env
+      - .env.auth
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
