@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     elastic_host: str = Field(default="127.0.0.1", env="ELASTIC_HOST")
     elastic_port: int = Field(default=9200, env="ELASTIC_PORT")
 
+    # Auth
+    auth_url: str = "http://auth_service:8000/api/v1/auth"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

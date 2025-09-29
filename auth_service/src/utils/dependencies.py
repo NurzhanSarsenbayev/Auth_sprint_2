@@ -6,7 +6,6 @@ import redis.asyncio as redis
 
 from db.postgres import get_session
 from db.redis_db import get_redis
-from core.oauth.providers.yandex import YandexOAuthProvider
 from repositories.user import UserRepository
 from repositories.role import RoleRepository
 from repositories.user_role import UserRoleRepository
@@ -19,7 +18,8 @@ from schemas.user import CurrentUserResponse
 from schemas.role import RoleResponse
 from models import User, Role
 from utils.jwt import decode_token
-
+from core.oauth.providers.yandex import YandexOAuthProvider
+from core.oauth.providers.google import GoogleOAuthProvider
 
 # =============================
 # OAuth2 Schemes
@@ -223,6 +223,7 @@ def get_current_user_with_roles(required_roles: list[str]):
 def get_oauth_service(db: AsyncSession = Depends(get_session)) -> OAuthService:
     providers = {
         "yandex": YandexOAuthProvider(),
+        "google": GoogleOAuthProvider(),
     }
     # БД отдаём отдельно через Depends (используем в handle_callback)
     svc = OAuthService(providers=providers)

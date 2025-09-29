@@ -18,6 +18,7 @@ httpx
 asgi_lifespan
 aiosqlite
 fastapi-pagination
+jwcrypto==1.5.6
 opentelemetry-api
 opentelemetry-sdk
 opentelemetry-exporter-otlp

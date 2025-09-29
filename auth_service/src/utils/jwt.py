@@ -2,6 +2,7 @@ import uuid
 import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
+from jwcrypto import jwk
 
 from fastapi import HTTPException, status
 from redis.asyncio import Redis
@@ -16,16 +17,18 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 # ---------- Генерация ----------
 def create_token(data: dict, expires_delta: timedelta, token_type: str) -> str:
-    """Универсальная функция генерации токенов"""
+    """Создаёт JWT, подписанный приватным ключом (RS256)"""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + expires_delta
     jti = str(uuid.uuid4())  # уникальный ID токена
     to_encode.update({"exp": expire, "type": token_type, "jti": jti})
-    print(settings.jwt_secret_key)
+    key = jwk.JWK.from_pem(settings.jwt_private_key.encode())
+    header = {"alg": settings.jwt_algorithm, "kid": key.thumbprint()}
     return jwt.encode(
         to_encode,
-        settings.jwt_secret_key,
+        settings.jwt_private_key,
         algorithm=settings.jwt_algorithm,
+        headers=header,
     )
 
 
@@ -61,11 +64,12 @@ async def is_token_blacklisted(redis: Optional[Redis], jti: str) -> bool:
 
 # ---------- Декод + проверка ----------
 async def decode_token(
-        token: str, redis: Optional[Redis] = None) -> dict[str, Any]:
+    token: str, redis: Optional[Redis] = None
+) -> dict[str, Any]:
     try:
         payload = jwt.decode(
             token,
-            settings.jwt_secret_key,
+            settings.jwt_public_key,   # 🔑 публичный ключ
             algorithms=[settings.jwt_algorithm],
         )
     except jwt.ExpiredSignatureError:
@@ -83,7 +87,7 @@ async def decode_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked"
         )
-    print(settings.jwt_secret_key)
+
     return payload
 
 
@@ -92,7 +96,7 @@ def get_token_ttl(token: str) -> int:
     """Вернуть TTL токена в секундах (для Redis)"""
     payload = jwt.decode(
         token,
-        settings.jwt_secret_key,
+        settings.jwt_public_key,   # 🔑 публичный ключ
         algorithms=[settings.jwt_algorithm],
         options={"verify_exp": False},
     )

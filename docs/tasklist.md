@@ -7,8 +7,8 @@
 - [x] Настроить OpenTelemetry трассировку → Jaeger
 - [x] Реализовать middleware rate limiting (Redis sliding window)
 - [x] Добавить таблицу `social_accounts` (Alembic migration)
-- [ ] Реализовать OAuth:
-  - [ ] Google вход
+- [x] Реализовать OAuth:
+  - [x] Google вход
   - [x] Yandex или VK вход
   - [x] Callback-роуты `/oauth/{provider}/callback`
 - [x] Реализовать отвязку соц.аккаунта (`unlink`)
@@ -19,10 +19,10 @@
 ---
 
 ## Content Service
-- [ ] Добавить зависимость `auth_dep` для проверки JWT:
-  - [ ] JWKS из Auth, кэш в Redis
-  - [ ] Фон-обновитель JWKS
-  - [ ] Изящная деградация → `guest` если Auth/JWKS недоступен
+- [x] Добавить зависимость `auth_dep` для проверки JWT:
+  - [x] JWKS из Auth, кэш в Redis
+  - [x] Фон-обновитель JWKS
+  - [x] Изящная деградация → `guest` если Auth/JWKS недоступен
 - [x] Добавить middleware `x-request-id`
 - [x] Подключить трассировку (OpenTelemetry → Jaeger)
 - [x] (опционально) rate limiting
