@@ -18,14 +18,20 @@ logger = logging.getLogger(__name__)
     max_delay=settings.WAIT_MAX_DELAY,
 )
 async def _check_redis():
-    client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+    client = redis.Redis(
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        db=0)
     pong = await client.ping()
     assert pong is True
     await client.aclose()
 
 
 async def wait_for_redis():
-    logger.info("⏳ Waiting for Redis at %s:%s ...", settings.REDIS_HOST, settings.REDIS_PORT)
+    logger.info(
+        "⏳ Waiting for Redis at %s:%s ...",
+        settings.REDIS_HOST,
+        settings.REDIS_PORT)
     await _check_redis()
     logger.info("✅ Redis is ready")
 

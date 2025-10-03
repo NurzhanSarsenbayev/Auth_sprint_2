@@ -10,8 +10,12 @@ class CacheStorageProtocol(Protocol):
         """
         ...
 
-    async def set(self, key: str, value: Any, expire: Optional[int] = None) -> None:
-        """Сохранить значение по ключу с возможным временем жизни (expire в секундах)."""
+    async def set(self,
+                  key: str,
+                  value: Any,
+                  expire: Optional[int] = None) -> None:
+        """Сохранить значение по ключу
+         с возможным временем жизни (expire в секундах)."""
         ...
 
 

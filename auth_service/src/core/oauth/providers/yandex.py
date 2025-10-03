@@ -7,8 +7,9 @@ from core.oauth.interfaces import OAuthProvider
 from core.oauth.types import OAuthUserInfo
 
 YANDEX_TOKEN_URL = "https://oauth.yandex.ru/token"
-YANDEX_AUTH_URL  = "https://oauth.yandex.ru/authorize"
+YANDEX_AUTH_URL = "https://oauth.yandex.ru/authorize"
 YANDEX_USERINFO_URL = "https://login.yandex.ru/info"
+
 
 class YandexOAuthProvider(OAuthProvider):
     name = "yandex"

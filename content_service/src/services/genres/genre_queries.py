@@ -24,6 +24,7 @@ def all_genres_query(size: int = 1000) -> dict:
         }
     }
 
+
 def genre_by_id_query(genre_id: UUID) -> dict:
     return {
         "size": 1,

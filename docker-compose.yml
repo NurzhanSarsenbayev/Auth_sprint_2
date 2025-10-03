@@ -75,7 +75,22 @@ services:
     ports:
       - "16686:16686"   # UI
       - "4318:4318"     # OTLP/HTTP traces
-      - "4317:4317"     # OTLP/gRPC (можно не использовать)
+
+  admin_service:
+    build: ./admin_panel
+    container_name: admin_service
+    env_file:
+      - ./admin_panel/.env.admin
+    working_dir: /app           # ВАЖНО
+    volumes:
+      - ./admin_panel:/app      # ВАЖНО — генерим файлы на хосте
+    ports:
+      - "8003:8000"
+    depends_on:
+      - postgres_auth
+    restart: unless-stopped
+    # ↓ включишь ПОТОМ, когда проект создан (config/manage.py есть)
+    command: python manage.py runserver 0.0.0.0:8000
 volumes:
   postgres_auth_data:
   es_data:

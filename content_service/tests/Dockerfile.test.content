@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Ставим системные пакеты для healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Копируем requirements для тестов
+COPY content_service/tests/requirements.test.content.txt requirements.test.content.txt
+RUN pip install --no-cache-dir -r requirements.test.content.txt
+
+ENV PYTHONPATH=/app:/app/src
+
+# Копируем исходники сервиса
+COPY content_service/src ./src
+
+# Копируем тесты
+COPY content_service/tests/functional ./functional
+COPY content_service/tests/entrypoint.test.content.sh ./entrypoint.test.content.sh
+RUN chmod +x ./entrypoint.test.content.sh
+
+ENTRYPOINT ["./entrypoint.test.content.sh"]
+CMD ["pytest", "-v", "functional/src"]

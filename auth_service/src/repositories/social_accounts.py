@@ -3,11 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from models.social_account import SocialAccount
 
+
 class SocialAccountRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get(self, provider: str, provider_account_id: str) -> Optional[SocialAccount]:
+    async def get(self,
+                  provider: str,
+                  provider_account_id: str) -> Optional[SocialAccount]:
         q = await self.db.execute(
             select(SocialAccount).where(
                 SocialAccount.provider == provider,
@@ -16,7 +19,10 @@ class SocialAccountRepository:
         )
         return q.scalar_one_or_none()
 
-    async def link(self, user_id, provider: str, provider_account_id: str) -> SocialAccount:
+    async def link(self,
+                   user_id,
+                   provider: str,
+                   provider_account_id: str) -> SocialAccount:
         sa = SocialAccount(
             user_id=user_id,
             provider=provider,
@@ -26,7 +32,9 @@ class SocialAccountRepository:
         await self.db.flush()
         return sa
 
-    async def unlink(self, user_id, provider: str) -> int:
+    async def unlink(self,
+                     user_id,
+                     provider: str) -> int:
         q = await self.db.execute(
             select(SocialAccount).where(
                 SocialAccount.user_id == user_id,

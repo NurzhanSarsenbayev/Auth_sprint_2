@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../content_service/src:/app/src
+    env_file:
+      - ../../content_service/tests/.env.test.content
+    depends_on:
+      - redis
+      - elasticsearch
+    networks:
+      - test_net
+
+  redis:
+    image: redis:7.2
+    container_name: tests_redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - test_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+    container_name: tests_elastic
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - test_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  tests:
+    build:
+      context: ../..                # корень проекта (Auth_sprint_2)
+      dockerfile: content_service/tests/Dockerfile.test.content
+    container_name: functional_tests
+    depends_on:
+      api:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - test_net
+    command: ["pytest", "-v", "functional/src"]
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: tests_jaeger
+    ports:
+      - "16686:16686"   # UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - test_net
+volumes:
+  redis_data:
+  es_data:
+
+networks:
+  test_net:

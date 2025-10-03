@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from fastapi.openapi.utils import get_openapi
 from contextlib import asynccontextmanager
-from api.v1 import auth, users, roles, user_roles, oauth
+from api.v1 import auth, users, roles, user_roles, oauth, well_known
 from db.redis_db import init_redis, close_redis
 from db.postgres import make_engine, make_session_factory
 from middleware.request_id import RequestIDMiddleware
@@ -11,6 +11,7 @@ from core.logging import setup_logging
 from core.config import settings
 from core import telemetry
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,7 +26,6 @@ async def lifespan(app: FastAPI):
     redis = await init_redis()
     app.state.redis = redis
 
-
     SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
 
     yield
@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI):
 
 telemetry.setup_tracing("auth_service")
 app = FastAPI(title="Auth Service", lifespan=lifespan)
+
 
 def custom_openapi():
     if app.openapi_schema:
@@ -52,22 +53,23 @@ def custom_openapi():
         "scheme": "bearer",
         "bearerFormat": "JWT",
     }
-    # можно не навешивать на все пути, а только на те, где хочешь проверять токен
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 app.openapi = custom_openapi
 setup_logging()
 telemetry.instrument_app(app)
 add_pagination(app)
-# 1) rate limit — правила от более строгих к общим
 rules = [
     # Регистрация — жёстче
     RateRule(r"^/api/v1/users/signup$", limit=5, window=60),
     # Логин — умеренно
     RateRule(r"^/api/v1/users/login$", limit=10, window=60),
     # Все остальные — дефолт (можно не указывать, просто для примера)
-    RateRule(r"^/api/v1/.*", limit=settings.rate_limit_max_requests, window=settings.rate_limit_window_sec),
+    RateRule(r"^/api/v1/.*",
+             limit=settings.rate_limit_max_requests,
+             window=settings.rate_limit_window_sec),
 ]
 
 app.add_middleware(
@@ -77,9 +79,7 @@ app.add_middleware(
     default_window=settings.rate_limit_window_sec,
     whitelist_paths=["/health", "/docs", "/openapi.json"],
 )
-# 2) request-id — должен быть СНАРУЖИ, чтобы оборачивать все ответы (в т.ч. 429)
 app.add_middleware(RequestIDMiddleware)
-
 
 
 # Роутеры
@@ -89,6 +89,8 @@ app.include_router(roles.router, prefix="/api/v1/roles", tags=["roles"])
 app.include_router(user_roles.router,
                    prefix="/api/v1/user_roles", tags=["user_roles"])
 app.include_router(oauth.router, prefix="/api/v1/oauth", tags=["oauth"])
+app.include_router(well_known.router)
+
 
 @app.get("/")
 async def root():

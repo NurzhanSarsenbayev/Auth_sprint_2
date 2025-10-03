@@ -11,7 +11,10 @@ def all_persons_query(size: int = 100) -> dict:
                     "persons": {
                         "terms": {"field": "actors.uuid", "size": size},
                         "aggs": {
-                            "name": {"terms": {"field": "actors.full_name.raw", "size": 1}}
+                            "name": {"terms": {
+                                "field": "actors.full_name.raw", "size": 1
+                            }
+                            }
                         }
                     }
                 },
@@ -22,7 +25,10 @@ def all_persons_query(size: int = 100) -> dict:
                     "persons": {
                         "terms": {"field": "writers.uuid", "size": size},
                         "aggs": {
-                            "name": {"terms": {"field": "writers.full_name.raw", "size": 1}}
+                            "name": {"terms": {
+                                "field": "writers.full_name.raw", "size": 1
+                            }
+                            }
                         }
                     }
                 },
@@ -33,7 +39,10 @@ def all_persons_query(size: int = 100) -> dict:
                     "persons": {
                         "terms": {"field": "directors.uuid", "size": size},
                         "aggs": {
-                            "name": {"terms": {"field": "directors.full_name.raw", "size": 1}}
+                            "name": {"terms": {
+                                "field": "directors.full_name.raw", "size": 1
+                            }
+                            }
                         }
                     }
                 },
@@ -41,6 +50,7 @@ def all_persons_query(size: int = 100) -> dict:
         },
     }
     return query
+
 
 def person_by_id_query(person_id: UUID) -> dict:
     """Запрос для поиска персоны по UUID."""
@@ -54,9 +64,18 @@ def person_by_id_query(person_id: UUID) -> dict:
                 ]
             }
         },
-        "_source": ["uuid", "id", "title", "imdb_rating", "actors", "directors", "writers"],
+        "_source": [
+            "uuid",
+            "id",
+            "title",
+            "imdb_rating",
+            "actors",
+            "directors",
+            "writers"
+        ],
         "size": 1000,
     }
+
 
 def search_person_query(query_str: str) -> dict:
     """Запрос для поиска персоны по имени (во всех ролях)."""
@@ -132,5 +151,3 @@ def films_by_person_query(person_id: UUID, size: int = 50) -> dict:
         "size": size,
         "track_total_hits": True
     }
-
-

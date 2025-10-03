@@ -7,7 +7,9 @@ from db.postgres import get_session
 from services.oauth import OAuthService
 from services.user import UserService
 from starlette.responses import RedirectResponse
-from utils.dependencies import get_oauth_service, get_user_service, get_current_user
+from utils.dependencies import (get_oauth_service,
+                                get_user_service,
+                                get_current_user)
 
 router = APIRouter()
 
@@ -34,11 +36,19 @@ async def oauth_callback(
     user_service: UserService = Depends(get_user_service),  # ⬅️ добавили
 ):
     if error:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, f"OAuth error from {provider}: {error}")
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            f"OAuth error from {provider}: {error}"
+        )
     if not code:
-        raise HTTPException(HTTPStatus.BAD_REQUEST, "Missing 'code' in OAuth callback")
+        raise HTTPException(
+            HTTPStatus.BAD_REQUEST,
+            "Missing 'code' in OAuth callback"
+        )
 
-    return await service.handle_callback(provider, code, db, user_service)  # ⬅️ передали
+    return await service.handle_callback(
+        provider, code, db, user_service
+    )  # ⬅️ передали
 
 
 @router.delete("/{provider}/unlink", status_code=HTTPStatus.NO_CONTENT)
@@ -48,4 +58,6 @@ async def unlink_social_account(
     service: OAuthService = Depends(get_oauth_service),
     current_user: User = Depends(get_current_user),  # <-- юзер из токена
 ):
-    await service.unlink(provider=provider, user_id=current_user.user_id, db=db)
+    await service.unlink(provider=provider,
+                         user_id=current_user.user_id,
+                         db=db)

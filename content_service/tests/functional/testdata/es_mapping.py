@@ -4,9 +4,9 @@ MOVIES_MAPPING = {
   "settings": {
     "analysis": {
       "filter": {
-        "ru_stop": { "type": "stop", "stopwords": "_russian_" },
-        "ru_stemmer": { "type": "stemmer", "language": "russian" },
-        "en_stemmer": { "type": "stemmer", "language": "english" }
+        "ru_stop": {"type": "stop", "stopwords": "_russian_"},
+        "ru_stemmer": {"type": "stemmer", "language": "russian"},
+        "en_stemmer": {"type": "stemmer", "language": "english"}
       },
       "analyzer": {
         "ru_en": {
@@ -19,24 +19,24 @@ MOVIES_MAPPING = {
   "mappings": {
     "dynamic": "strict",
     "properties": {
-      "uuid": { "type": "keyword" },
+      "uuid": {"type": "keyword"},
       "title": {
         "type": "text",
         "analyzer": "ru_en",
-        "fields": { "raw": { "type": "keyword" } }
+        "fields": {"raw": {"type": "keyword"}}
       },
-      "imdb_rating": { "type": "float" },
-      "description": { "type": "text", "analyzer": "ru_en" },
+      "imdb_rating": {"type": "float"},
+      "description": {"type": "text", "analyzer": "ru_en"},
 
       "genres": {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "uuid": { "type": "keyword" },
+          "uuid": {"type": "keyword"},
           "name": {
             "type": "text",
             "analyzer": "ru_en",
-            "fields": { "raw": { "type": "keyword" } }
+            "fields": {"raw": {"type": "keyword"}}
           }
         }
       },
@@ -45,11 +45,11 @@ MOVIES_MAPPING = {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "uuid": { "type": "keyword" },
+          "uuid": {"type": "keyword"},
           "full_name": {
             "type": "text",
             "analyzer": "ru_en",
-            "fields": { "raw": { "type": "keyword" } }
+            "fields": {"raw": {"type": "keyword"}}
           }
         }
       },
@@ -57,11 +57,11 @@ MOVIES_MAPPING = {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "uuid": { "type": "keyword" },
+          "uuid": {"type": "keyword"},
           "full_name": {
             "type": "text",
             "analyzer": "ru_en",
-            "fields": { "raw": { "type": "keyword" } }
+            "fields": {"raw": {"type": "keyword"}}
           }
         }
       },
@@ -69,11 +69,11 @@ MOVIES_MAPPING = {
         "type": "nested",
         "dynamic": "strict",
         "properties": {
-          "uuid": { "type": "keyword" },
+          "uuid": {"type": "keyword"},
           "full_name": {
             "type": "text",
             "analyzer": "ru_en",
-            "fields": { "raw": { "type": "keyword" } }
+            "fields": {"raw": {"type": "keyword"}}
           }
         }
       }

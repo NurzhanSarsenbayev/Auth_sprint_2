@@ -16,35 +16,45 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.window_seconds = window_seconds
 
     async def dispatch(self, request: Request, call_next):
+        # 🔓 bypass для тестов
+        if request.headers.get("X-Test-Bypass-Ratelimit") == "1":
+            return await call_next(request)
+
         redis = request.app.state.redis_storage
-        client_ip = request.client.host
+        client_ip = request.client.host or "unknown"
         key = f"rate_limit:{client_ip}"
-        now = int(time.time())
-
-        # чистим старые записи
-        await redis.zremrangebyscore(key, 0, now - self.window_seconds)
-
-        # текущий счётчик
-        req_count = await redis.zcard(key)
+        now = int(time.time() * 1000)  # ⚡ миллисекунды
+        window_ms = self.window_seconds * 1000
         request_id = request_id_ctx.get()
 
-        if req_count >= self.max_requests:
+        # 🧹 очищаем старые записи
+        await redis.zremrangebyscore(key, 0, now - window_ms)
+
+        # добавляем текущий запрос
+        member = f"{client_ip}:{uuid.uuid4()}"
+        await redis.zadd(key, {member: now})
+        await redis.expire(key, self.window_seconds)
+
+        # считаем сколько запросов в окне
+        req_count = await redis.zcard(key)
+        members = await redis.zrange(key, 0, -1, withscores=True)
+
+        logger.info(
+            f"📊 RateLimit: ip={client_ip},"
+            f" count={req_count}/{self.max_requests}, "
+            f"now={now}, members={members}, [id={request_id}]"
+        )
+
+        if req_count > self.max_requests:
             logger.warning(
-                f"⛔ Rate limit exceeded for {client_ip}: {req_count}/{self.max_requests} [id={request_id}]"
+                f"⛔ Rate limit exceeded for "
+                f"{client_ip}: "
+                f"{req_count}/{self.max_requests}"
+                f" [id={request_id}]"
             )
             return JSONResponse(
                 {"detail": "Too Many Requests"},
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        # добавляем уникальный элемент в Redis (чтобы счётчик рос)
-        member = f"{client_ip}:{uuid.uuid4()}"
-        await redis.zadd(key, {member: now})
-        await redis.expire(key, self.window_seconds)
-
-        logger.info(
-            f"✅ Rate counter for {client_ip} -> {req_count + 1}/{self.max_requests} [id={request_id}]"
-        )
-
-        response = await call_next(request)
-        return response
+        return await call_next(request)

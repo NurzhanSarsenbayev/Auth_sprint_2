@@ -29,7 +29,10 @@ class RedisStorage(CacheStorageProtocol):
             raise RuntimeError("Redis is not connected")
         return await self._redis.get(key)
 
-    async def set(self, key: str, value: Any, expire: Optional[int] = None) -> None:
+    async def set(self,
+                  key: str,
+                  value: Any,
+                  expire: Optional[int] = None) -> None:
         if not self._redis:
             raise RuntimeError("Redis is not connected")
         await self._redis.set(key, value, ex=expire)

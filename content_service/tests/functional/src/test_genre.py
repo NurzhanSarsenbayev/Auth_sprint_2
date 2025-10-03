@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from aiohttp import ClientSession
 from http import HTTPStatus
 from functional.settings import settings
@@ -22,7 +21,8 @@ async def test_get_genre_by_id(http_session: ClientSession, es_ready):
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/genres/{genre_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/genres/{genre_id}"
     ) as resp:
         data = await resp.json()
 
@@ -52,14 +52,18 @@ async def test_get_all_genres(http_session: ClientSession, es_ready):
 
 
 @pytest.mark.asyncio
-async def test_genre_cache(redis_client, http_session: ClientSession, es_ready):
+async def test_genre_cache(
+        redis_client,
+        http_session: ClientSession,
+        es_ready):
     # Arrange
     genre_id = "babf7031-6c46-4a02-aaf4-e3e17d948a82"
     await redis_client.flushall()
 
     # Act 1 (кэш пуст → идём в API/ES)
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/genres/{genre_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/genres/{genre_id}"
     ) as resp1:
         data1 = await resp1.json()
 
@@ -71,7 +75,8 @@ async def test_genre_cache(redis_client, http_session: ClientSession, es_ready):
 
     # Act 2 (кэш уже есть → возвращаем из Redis)
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/genres/{genre_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/genres/{genre_id}"
     ) as resp2:
         data2 = await resp2.json()
 

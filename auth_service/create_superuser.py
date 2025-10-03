@@ -17,7 +17,7 @@ def create_superuser(db_url: str | None = None):
         url = db_url
 
     # 2. если переменная окружения TESTING=1 → берём test_settings
-    elif os.getenv("TESTING") == 1:
+    elif os.getenv("TESTING", "0") == "1":
         url = test_settings.database_url
 
     # 3. иначе → обычные settings

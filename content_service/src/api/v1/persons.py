@@ -36,7 +36,11 @@ async def persons_list(
 
 @router.get("/search", response_model=List[Person])
 async def search_persons(
-    query: str = Query(...,min_length=1, description="Поисковая строка для поиска персон"),
+    query: str = Query(
+        ...,
+        min_length=1,
+        description="Поисковая строка для поиска персон"
+    ),
     person_service: PersonService = Depends(get_person_service),
 ):
     """

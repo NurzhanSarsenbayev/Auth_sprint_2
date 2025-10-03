@@ -9,11 +9,11 @@ from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
 
 from core.config import settings
-from core.telemetry import setup_tracing, instrument_app
+from core.telemetry import setup_tracing, instrument_app, shutdown_tracing
 from core.logger import LOGGING
 
 from api.v1 import films, genres, persons, search, ping
-from services.cache_builder import build_cache, wait_for_elastic
+from services.cache_builder import wait_for_elastic
 from middleware.request_id import RequestIDMiddleware
 from middleware.rate_limit import RateLimitMiddleware
 
@@ -41,7 +41,9 @@ async def jwks_refresher(cache: Redis, interval: int = 600):
         except Exception as e:
             logger.error(f"❌ Ошибка обновления JWKS: {e}")
         finally:
-            logger.debug("⏳ Следующее обновление JWKS через %s секунд", interval)
+            logger.debug(
+                "⏳ Следующее обновление"
+                " JWKS через %s секунд", interval)
             await asyncio.sleep(interval)
 
 
@@ -62,7 +64,8 @@ async def lifespan(app: FastAPI):
     await wait_for_elastic(app.state.es_storage, timeout=60)
 
     # Запускаем фоновый обновитель JWKS
-    task = asyncio.create_task(jwks_refresher(app.state.redis_storage, interval=10))
+    task = asyncio.create_task(
+        jwks_refresher(app.state.redis_storage, interval=600))
     app.state.jwks_refresher_task = task
     logger.info("✅ JWKS refresher task started")
 
@@ -80,14 +83,21 @@ async def lifespan(app: FastAPI):
     await app.state.es_storage.close()
     logger.info("✅ Redis и Elasticsearch соединения закрыты")
 
+    shutdown_tracing()
+    logger.info("✅ OpenTelemetry трассировка корректно остановлена")
+
 # --- Сначала трейсинг ---
 setup_tracing("content_service")
 
 # --- FastAPI App ---
 app = FastAPI(
     title="Read-only API для онлайн-кинотеатра",
+    openapi_url="/api/openapi",
     default_response_class=ORJSONResponse,
-    description="Информация о фильмах, жанрах и людях, участвовавших в создании произведения",
+    description="Информация о фильмах,"
+                " жанрах и людях,"
+                " участвовавших"
+                " в создании произведения",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -5,6 +5,7 @@ from core.logging import request_id_ctx
 
 logger = logging.getLogger("app")
 
+
 class RequestIDMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         request_id = request.headers.get("x-request-id", str(uuid.uuid4()))

@@ -1,4 +1,6 @@
 import os
+import logging
+
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -9,10 +11,15 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+from requests.exceptions import ConnectionError as RequestsConnectionError
+
+logger = logging.getLogger("app")
+
 
 def setup_tracing(service_name: str = "content_service"):
     # Самплинг: в dev собираем всё (1.0). На проде можно 0.1
-    sampler = ParentBased(TraceIdRatioBased(float(os.getenv("OTEL_SAMPLING_RATIO", "1.0"))))
+    sampler = ParentBased(
+        TraceIdRatioBased(float(os.getenv("OTEL_SAMPLING_RATIO", "1.0"))))
 
     resource = Resource.create({
         "service.name": os.getenv("OTEL_SERVICE_NAME", service_name),
@@ -24,10 +31,12 @@ def setup_tracing(service_name: str = "content_service"):
     trace.set_tracer_provider(provider)
 
     exporter = OTLPSpanExporter(
-        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://jaeger:4318/v1/traces"),
+        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT",
+                           "http://jaeger:4318/v1/traces"),
         timeout=5
     )
     provider.add_span_processor(BatchSpanProcessor(exporter))
+
 
 def instrument_app(app):
     # Добавляем атрибуты к span из request (включая твой x-request-id)
@@ -53,3 +62,14 @@ def instrument_app(app):
     RedisInstrumentor().instrument()
     HTTPXClientInstrumentor().instrument()
     ElasticsearchInstrumentor().instrument()
+
+
+def shutdown_tracing():
+    provider = trace.get_tracer_provider()
+    if isinstance(provider, TracerProvider):
+        try:
+            provider.shutdown()
+        except RequestsConnectionError:
+            logger.warning("⚠️ Jaeger недоступен, трейсы не выгружены")
+        except Exception as e:
+            logger.warning(f"⚠️ Telemetry exporter shutdown error: {e}")

@@ -1,0 +1,24 @@
+    # Dockerfile для Django Admin Panel
+    FROM python:3.11-slim
+
+    # Устанавливаем зависимости
+    RUN apt-get update && apt-get install -y \
+        libpq-dev gcc \
+        && rm -rf /var/lib/apt/lists/*
+
+    WORKDIR /opt/admin_panel
+
+    # Скопируем requirements и установим
+    COPY requirements.admin.txt requirements.admin.txt
+    COPY requirements.test.admin.txt requirements.test.admin.txt
+    RUN pip install --no-cache-dir -r requirements.test.admin.txt
+
+    # Скопируем проект
+    COPY . .
+
+    # Настраиваем переменные среды (можно override через .env)
+    ENV PYTHONUNBUFFERED=1 \
+        DJANGO_SETTINGS_MODULE=config.settings
+
+    # Запуск через gunicorn/uwsgi или dev-сервер (для тестов)
+    CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

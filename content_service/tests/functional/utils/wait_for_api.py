@@ -26,7 +26,10 @@ async def _check_api():
 
 
 async def wait_for_api():
-    logger.info("⏳ Waiting for API at %s:%s ...", settings.API_HOST, settings.API_PORT)
+    logger.info(
+        "⏳ Waiting for API at %s:%s ...",
+        settings.API_HOST,
+        settings.API_PORT)
     await _check_api()
     logger.info("✅ API is ready")
 

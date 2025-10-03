@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  test_postgres:
+    image: postgres:16
+    container_name: auth_postgres_test
+    env_file:
+      - .env.test.auth
+#    ports:
+#      - "5433:5432"   # наружу открываем 5433, чтобы не конфликтовать с dev
+    volumes:
+      - test_pg_data:/var/lib/postgresql/data
+
+  test_redis:
+    image: redis:7
+    container_name: auth_redis_test
+    env_file:
+      - .env.test.auth
+#    ports:
+#      - "6380:6379"   # наружу открываем 6380
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+    volumes:
+      - test_redis_data:/data
+
+  tests:
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile.test.auth
+    container_name: auth_tests
+    depends_on:
+      test_redis:
+        condition: service_started
+    env_file:
+      - .env.test.auth
+    environment:
+      OTEL_SERVICE_NAME: "auth-tests"
+      OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
+    entrypoint: ["sh", "/app/tests/entrypoint.test.auth.sh"]
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  test_pg_data:
+  test_redis_data:

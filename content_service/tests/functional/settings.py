@@ -13,8 +13,10 @@ class TestSettings(BaseSettings):
     ELASTIC_INDEX: str = "movies"
     ELASTIC_ID_FIELD: str = "uuid"
 
-    API_HOST: str = "tests_api"
+    API_HOST: str = "api"
     API_PORT: int = 8000
+
+    TESTING: bool = True
 
     # --- Backoff/wait params ---
     WAIT_MAX_ATTEMPTS: int = 40

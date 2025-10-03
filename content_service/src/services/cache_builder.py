@@ -58,9 +58,13 @@ async def build_cache(elastic: AsyncElasticsearch, redis: Redis):
                         if p["uuid"] not in persons_cache:
                             persons_cache[p["uuid"]] = p["full_name"]
 
-            await redis.set("genres_cache", json.dumps(genres_cache), ex=CACHE_TTL)
-            await redis.set("persons_cache", json.dumps(persons_cache), ex=CACHE_TTL)
-            print(f"Кэш построен: {len(genres_cache)} жанров и {len(persons_cache)} персон.")
+            await redis.set(
+                "genres_cache", json.dumps(genres_cache), ex=CACHE_TTL)
+            await redis.set(
+                "persons_cache", json.dumps(persons_cache), ex=CACHE_TTL)
+            print(
+                f"Кэш построен: {len(genres_cache)}"
+                f" жанров и {len(persons_cache)} персон.")
 
             # Ждем час до следующего обновления
             await asyncio.sleep(3600)
@@ -70,7 +74,10 @@ async def build_cache(elastic: AsyncElasticsearch, redis: Redis):
             await asyncio.sleep(5)
 
 
-async def wait_for_elastic(es: AsyncElasticsearch, timeout: int = 60, initial_delay: int = 30):
+async def wait_for_elastic(
+        es: AsyncElasticsearch,
+        timeout: int = 60,
+        initial_delay: int = 30):
     """
     Ждём, пока Elasticsearch не станет доступен.
 
@@ -93,22 +100,3 @@ async def wait_for_elastic(es: AsyncElasticsearch, timeout: int = 60, initial_de
         await asyncio.sleep(1)
 
     raise RuntimeError("Elasticsearch не доступен после ожидания")
-
-# async def log_exceptions(coro):
-#     try:
-#         await coro
-#     except Exception as e:
-#         print(f"Ошибка в background task: {e}")
-#
-# async def wait_for_index(es: AsyncElasticsearch, index: str, timeout: int = 60):
-#     start = asyncio.get_event_loop().time()
-#     while True:
-#         try:
-#             if await es.indices.exists(index=index):
-#                 print(f"✅ Index '{index}' exists!")
-#                 return
-#         except Exception:
-#             pass
-#         if asyncio.get_event_loop().time() - start > timeout:
-#             raise RuntimeError(f"Index '{index}' не доступен после {timeout} секунд")
-#         await asyncio.sleep(30)

@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from aiohttp import ClientSession
 from http import HTTPStatus
 from functional.settings import settings
@@ -22,7 +21,8 @@ async def test_get_person_by_id(http_session: ClientSession):
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/persons/{person_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/persons/{person_id}"
     ) as resp:
         data = await resp.json()
 
@@ -38,7 +38,9 @@ async def test_get_person_by_id(http_session: ClientSession):
 async def test_get_all_persons(http_session: ClientSession, es_ready):
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/persons/?page=1&size=5"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/persons/?"
+        f"page=1&size=5"
     ) as resp:
         data = await resp.json()
 
@@ -55,7 +57,8 @@ async def test_person_films(http_session: ClientSession, es_ready):
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/persons/{person_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/persons/{person_id}"
     ) as resp:
         data = await resp.json()
 
@@ -73,19 +76,26 @@ async def test_person_films(http_session: ClientSession, es_ready):
         assert "uuid" in film and isinstance(film["uuid"], str)
         assert "title" in film and isinstance(film["title"], str)
         assert "imdb_rating" in film
-        assert isinstance(film["imdb_rating"], (float, int)) or film["imdb_rating"] is None
+        assert isinstance(
+            film["imdb_rating"],
+            (float, int)) or film["imdb_rating"] is None
 
 
 # -------------------- Поиск с учётом кэша в Redis --------------------
 @pytest.mark.asyncio
-async def test_person_cache(http_session: ClientSession, redis_client, es_ready):
+async def test_person_cache(
+        http_session: ClientSession,
+        redis_client,
+        es_ready):
     # Arrange
     person_name = "George Lucas"
     await redis_client.flushdb()
 
     # Act 1
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/persons/?query={person_name}&page=1&size=3"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/persons/?"
+        f"query={person_name}&page=1&size=3"
     ) as resp1:
         data1 = await resp1.json()
 
@@ -94,7 +104,9 @@ async def test_person_cache(http_session: ClientSession, redis_client, es_ready)
 
     # Act 2
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/persons/?query={person_name}&page=1&size=3"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/persons/?"
+        f"query={person_name}&page=1&size=3"
     ) as resp2:
         data2 = await resp2.json()
 

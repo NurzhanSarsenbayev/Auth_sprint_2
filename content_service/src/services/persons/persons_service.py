@@ -1,9 +1,6 @@
 from typing import List, Optional
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch
-from redis.asyncio import Redis
-
 from src.services.base import BaseService
 from models.person import Person
 
@@ -16,7 +13,9 @@ class PersonService(BaseService):
     def __init__(self, cache, search, ttl: int = 300):
         super().__init__(cache, search, ttl)
 
-    async def list_persons(self, size: int = 100, page: int = 1) -> List[Person]:
+    async def list_persons(self,
+                           size: int = 100,
+                           page: int = 1) -> List[Person]:
 
         cache_key = self.make_cache_key("list_persons", page=page, size=size)
 

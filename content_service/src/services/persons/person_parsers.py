@@ -2,11 +2,14 @@ from typing import List, Dict, Any, Optional
 from uuid import UUID
 
 from models.person import Person
+from models.film import Film
 from models.film_short import FilmShort
+
 
 def parse_persons_from_agg(response: dict) -> list[Person]:
     """
-    Парсим агрегации actors/writers/directors в единый список персон без дублей.
+    Парсим агрегации actors/writers/directors
+    в единый список персон без дублей.
     """
     persons_dict: dict[str, str] = {}
 
@@ -26,12 +29,15 @@ def parse_persons_from_agg(response: dict) -> list[Person]:
                 persons_dict[uuid] = full_name
 
     # преобразуем в список Person
-    return [Person(uuid=uid, full_name=name) for uid, name in persons_dict.items()]
-
+    return [
+        Person(uuid=uid, full_name=name)
+        for uid, name in persons_dict.items()
+    ]
 
 
 def parse_persons_from_hits(hits: List[Dict[str, Any]]) -> List[Person]:
-    """Достаёт всех персон с привязкой к фильмам из документов ES."""
+    """Достаёт всех персон с
+    привязкой к фильмам из документов ES."""
     persons_dict: Dict[str, Person] = {}
 
     for doc in hits:
@@ -56,7 +62,9 @@ def parse_persons_from_hits(hits: List[Dict[str, Any]]) -> List[Person]:
     return list(persons_dict.values())
 
 
-def parse_person_with_films(hits: List[Dict[str, Any]], person_id: UUID) -> Optional[Person]:
+def parse_person_with_films(
+        hits: List[Dict[str, Any]],
+        person_id: UUID) -> Optional[Person]:
     """Возвращает персону по UUID + список фильмов, где она участвовала."""
     if not hits:
         return None
@@ -93,8 +101,13 @@ def parse_person_with_films(hits: List[Dict[str, Any]], person_id: UUID) -> Opti
 
     return person
 
-def parse_persons_with_name(hits: List[Dict[str, Any]], query_str: str) -> List[Person]:
-    """Достаёт уникальных персон по имени из документов ES (регистронезависимый поиск)."""
+
+def parse_persons_with_name(
+        hits: List[Dict[str, Any]],
+        query_str: str) -> List[Person]:
+    """Достаёт уникальных персон
+     по имени из документов ES
+    (регистронезависимый поиск)."""
     result = []
     seen = set()
     normalized_query = query_str.strip().lower()

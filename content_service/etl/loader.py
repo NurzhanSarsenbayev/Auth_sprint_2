@@ -15,7 +15,8 @@ import time
 from elasticsearch import Elasticsearch, helpers
 
 # --- Конфигурация ---
-ES_HOST = f"http://{os.getenv('ELASTIC_HOST', 'elasticsearch')}:{os.getenv('ELASTIC_PORT', '9200')}"  # Хост Elasticsearch
+ES_HOST = (f"http://{os.getenv('ELASTIC_HOST', 'elasticsearch')}"
+           f":{os.getenv('ELASTIC_PORT', '9200')}")  # Хост Elasticsearch
 INDEX_NAME = "movies"                     # Имя индекса
 BULK_FILE = "data/movies_data_v2.json"   # Путь к bulk-файлу
 

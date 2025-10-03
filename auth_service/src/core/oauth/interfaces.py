@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Protocol
 from .types import OAuthUserInfo
+
 
 class OAuthProvider(ABC):
     name: str

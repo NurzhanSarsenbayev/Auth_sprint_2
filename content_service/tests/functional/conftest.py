@@ -2,6 +2,8 @@ import asyncio
 import json
 import logging
 
+import pytest
+
 import redis.asyncio as redis
 import pytest_asyncio
 import aiohttp
@@ -14,9 +16,16 @@ from functional.settings import settings
 logger = logging.getLogger(__name__)
 
 # ---------- aiohttp session ----------
+
+
 @pytest_asyncio.fixture
-async def http_session():
-    session = aiohttp.ClientSession()
+async def http_session(request):
+    headers = {}
+    # если тест не про rate_limit → добавляем байпас-заголовок
+    if "rate_limit" not in request.node.nodeid:
+        headers["X-Test-Bypass-Ratelimit"] = "1"
+
+    session = aiohttp.ClientSession(headers=headers)
     yield session
     await session.close()
 
@@ -24,9 +33,12 @@ async def http_session():
 # ---------- elasticsearch client ----------
 @pytest_asyncio.fixture(scope="session")
 async def es_client():
-    client = AsyncElasticsearch(hosts=[f"http://{settings.ELASTIC_HOST}:{settings.ELASTIC_PORT}"])
+    client = AsyncElasticsearch(
+        hosts=[f"http://{settings.ELASTIC_HOST}:"
+               f"{settings.ELASTIC_PORT}"])
     yield client
     await client.close()
+
 
 @pytest_asyncio.fixture(scope="session")
 def event_loop():
@@ -45,6 +57,7 @@ async def redis_client(event_loop):
     yield client
     await client.aclose()
 
+
 # ---------- prepare elasticsearch with data ----------
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_es(es_client):
@@ -52,10 +65,13 @@ async def setup_es(es_client):
     if await es_client.indices.exists(index=settings.ELASTIC_INDEX):
         await es_client.indices.delete(index=settings.ELASTIC_INDEX)
 
-    await es_client.indices.create(index=settings.ELASTIC_INDEX, body=MOVIES_MAPPING)
+    await es_client.indices.create(
+        index=settings.ELASTIC_INDEX, body=MOVIES_MAPPING)
 
     actions = []
-    with open("functional/testdata/test_data.json", "r", encoding="utf-8") as f:
+    with open("functional/testdata/test_data.json",
+              "r",
+              encoding="utf-8") as f:
         for line in f:
             if not line.strip():
                 continue
@@ -91,6 +107,7 @@ async def setup_es(es_client):
     count = await es_client.count(index=settings.ELASTIC_INDEX)
     assert count["count"] > 0, "❌ Данные не загрузились в Elasticsearch"
     logger.info(f"Загружено {count['count']} документов в ES")
+
 
 @pytest_asyncio.fixture(scope="session")
 async def es_ready(setup_es):

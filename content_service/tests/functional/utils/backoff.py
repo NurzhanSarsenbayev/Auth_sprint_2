@@ -2,7 +2,7 @@ import asyncio
 import functools
 import logging
 import random
-from typing import Callable, Tuple, Optional
+from typing import Callable, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,8 @@ def async_retry(
     max_delay: float = 3.0,
     jitter: bool = True,
 ):
-    """Декоратор для ретрая асинхронных функций с экспоненциальным бэкоффом и джиттером."""
+    """Декоратор для ретрая асинхронных функций
+     с экспоненциальным бэкоффом и джиттером."""
     def decorator(func: Callable):
         if not asyncio.iscoroutinefunction(func):
             raise RuntimeError("async_retry supports only async functions")
@@ -30,7 +31,9 @@ def async_retry(
                 except exceptions as exc:
                     attempt += 1
                     if attempt >= max_attempts:
-                        logger.exception("Max attempts reached for %s", func.__name__)
+                        logger.exception(
+                            "Max attempts reached for %s",
+                            func.__name__)
                         raise
                     delay = min(max_delay, base_delay * (2 ** (attempt - 1)))
                     if jitter:

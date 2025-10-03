@@ -20,8 +20,12 @@ venv.bak/
 ### --- Env files ---
 .env
 .env.*
-!.env.example
-!.env.test.example
+!.env.auth.example
+!.env.content.example
+!.env.admin.example
+!.env.test.auth.example
+!.env.test.content.example
+!.env.test.admin.example
 
 ### --- IDEs / Editors ---
 .idea/
@@ -72,3 +76,9 @@ alembic/versions/__pycache__/
 /data
 /etl
 taskfull
+
+# --- Django ---
+*.sqlite3
+media/
+staticfiles/
+admin_panel/staticfiles/

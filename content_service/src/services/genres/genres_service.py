@@ -8,6 +8,7 @@ from services.genres.genre_fetchers import (fetch_genres_paginated,
                                             fetch_genre_by_id,
                                             fetch_genre_by_name)
 
+
 class GenreService(BaseService):
     def __init__(self, cache, search, ttl: int = 10):
         super().__init__(cache, search, ttl)

@@ -36,7 +36,11 @@ async def genres_list(
 
 @router.get("/search", response_model=List[Genre])
 async def search_genres(
-    query: str = Query(...,min_length=1, description="Поисковый запрос для жанров"),
+    query: str = Query(
+        ...,
+        min_length=1,
+        description="Поисковый запрос для жанров"
+    ),
     genre_service: GenreService = Depends(get_genre_service),
 ):
     """

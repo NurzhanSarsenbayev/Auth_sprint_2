@@ -9,14 +9,18 @@ from services.films.film_fetchers import (fetch_films_list,
                                           fetch_film_by_id,
                                           fetch_short_film_by_name)
 
+
 class FilmService(BaseService):
     def __init__(self, cache, search, ttl: int = 10):
         super().__init__(cache, search, ttl)
 
     async def list_films(
-        self, page: int = 1, size: int = 50, sort: str = "-imdb_rating"
-    ) -> List[FilmShort]:
-        cache_key = self.make_cache_key("list_films", page=page, size=size, sort=sort)
+            self,
+            page: int = 1,
+            size: int = 50,
+            sort: str = "-imdb_rating") -> List[FilmShort]:
+        cache_key = self.make_cache_key(
+            "list_films", page=page, size=size, sort=sort)
 
         return await self.get_or_set_cache(
             cache_key,
@@ -25,12 +29,18 @@ class FilmService(BaseService):
             deserializer=lambda cached: [FilmShort(**f) for f in cached],
         )
 
-    async def search_films(self, query_str: str, page: int = 1, size: int = 50) -> List[FilmShort]:
-        cache_key = self.make_cache_key("search_films", query=query_str, page=page, size=size)
+    async def search_films(
+            self,
+            query_str: str,
+            page: int = 1,
+            size: int = 50) -> List[FilmShort]:
+        cache_key = self.make_cache_key(
+            "search_films", query=query_str, page=page, size=size)
 
         return await self.get_or_set_cache(
             cache_key,
-            fetch_fn=lambda: fetch_short_film_by_name(self, query_str, page, size),
+            fetch_fn=lambda: fetch_short_film_by_name(
+                self, query_str, page, size),
             serializer=lambda films: [f.dict() for f in films],
             deserializer=lambda cached: [FilmShort(**f) for f in cached],
         )

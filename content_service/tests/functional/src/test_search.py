@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from aiohttp import ClientSession
 from http import HTTPStatus
 from functional.settings import settings
@@ -9,7 +8,9 @@ from functional.settings import settings
 async def test_search_validation(http_session: ClientSession):
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/search/?size=-1&query=test"
+        f"http://{settings.API_HOST}"
+        f":{settings.API_PORT}/api/v1/search/?"
+        f"size=-1&query=test"
     ) as resp1:
         # Assert
         assert resp1.status == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -29,7 +30,9 @@ async def test_search_limit_records(http_session: ClientSession, es_ready):
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/search/?query=test&size={N}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/search/?"
+        f"query=test&size={N}"
     ) as resp:
         data = await resp.json()
 
@@ -47,7 +50,9 @@ async def test_search_by_phrase(http_session: ClientSession, es_ready):
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/search/?query={phrase}&page=1&size=5"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/search/?"
+        f"query={phrase}&page=1&size=5"
     ) as resp:
         data = await resp.json()
 
@@ -55,20 +60,27 @@ async def test_search_by_phrase(http_session: ClientSession, es_ready):
     assert resp.status == HTTPStatus.OK
     assert (
         any(phrase.lower() in f["title"].lower() for f in data["films"])
-        or any(phrase.lower() in p["full_name"].lower() for p in data["persons"])
-        or any(phrase.lower() in g["name"].lower() for g in data["genres"])
+        or any(phrase.lower()
+               in p["full_name"].lower() for p in data["persons"])
+        or any(phrase.lower()
+               in g["name"].lower() for g in data["genres"])
     )
 
 
 @pytest.mark.asyncio
-async def test_search_cache(http_session: ClientSession, redis_client, es_ready):
+async def test_search_cache(
+        http_session: ClientSession,
+        redis_client,
+        es_ready):
     # Arrange
     phrase = "Star Wars"
     await redis_client.flushdb()
 
     # Act 1
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/search/?query={phrase}&page=1&size=3"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/search/?"
+        f"query={phrase}&page=1&size=3"
     ) as resp1:
         data1 = await resp1.json()
 
@@ -77,7 +89,9 @@ async def test_search_cache(http_session: ClientSession, redis_client, es_ready)
 
     # Act 2
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/search/?query={phrase}&page=1&size=3"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/search/?"
+        f"query={phrase}&page=1&size=3"
     ) as resp2:
         data2 = await resp2.json()
 

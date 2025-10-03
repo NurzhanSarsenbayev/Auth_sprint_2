@@ -4,12 +4,13 @@ import uuid
 from typing import Iterable, Optional
 
 from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.middleware.base import (BaseHTTPMiddleware,
+                                       RequestResponseEndpoint)
 from starlette.responses import JSONResponse
 from redis.asyncio import Redis
 
 from core.config import settings
-from core.logging import request_id_ctx  # чтобы включать req_id в логи/заголовки
+from core.logging import request_id_ctx
 import logging
 
 
@@ -39,7 +40,8 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
       3) Если count >= limit -> 429
          (берём самый старый ts, считаем reset и Retry-After)
       4) Иначе ZADD(now, member), EXPIRE(key, window)
-    Заголовки: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset(+ Retry-After при 429).
+    Заголовки: X-RateLimit-Limit, X-RateLimit-Remaining,
+     X-RateLimit-Reset(+ Retry-After при 429).
     Идентификатор: user_id, если он известен в request.state.user_id; иначе IP.
     """
 
@@ -55,7 +57,9 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.logger = logging.getLogger("app")
 
-        self.redis = redis or Redis(host=settings.redis_host, port=settings.redis_port, decode_responses=True)
+        self.redis = redis or Redis(host=settings.redis_host,
+                                    port=settings.redis_port,
+                                    decode_responses=True)
 
         self.default_limit = default_limit or settings.rate_limit_max_requests
         self.default_window = default_window or settings.rate_limit_window_sec
@@ -69,9 +73,17 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             if r.pattern.match(path):
                 return r
         # дефолт
-        return RateRule(pattern=r".*", limit=self.default_limit, window=self.default_window)
+        return RateRule(pattern=r".*",
+                        limit=self.default_limit,
+                        window=self.default_window)
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self,
+                       request: Request,
+                       call_next: RequestResponseEndpoint) -> Response:
+        # если в тестах — пропускаем без лимитов
+        if getattr(settings, "testing", False):
+            return await call_next(request)
+
         # белый список путей — пропускаем без лимита
         if request.url.path in self.whitelist:
             return await call_next(request)
@@ -97,9 +109,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         try:
             _, count = await pipe.execute()
         except Exception as e:
-            # Если Redis недоступен — graceful degradation: ПРОПУСКАЕМ запрос (но логируем)
+            # Если Redis недоступен — graceful degradation
             req_id = request_id_ctx.get("-")
-            self.logger.warning(f"[rate] Redis error, skip limiting (req_id={req_id}): {e}")
+            self.logger.warning(
+                f"[rate] Redis error, skip limiting (req_id={req_id}): {e}")
             return await call_next(request)
 
         if count >= rule.limit:

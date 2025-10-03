@@ -1,0 +1,6 @@
+-r requirements.admin.txt   # подтянет всё из основного
+
+pytest
+pytest-django
+pytest-asyncio
+factory-boy

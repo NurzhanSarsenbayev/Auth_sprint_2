@@ -19,7 +19,11 @@ def film_by_id_query(film_id: UUID) -> dict:
         "size": 1,
     }
 
-def search_films_query(query_str: str,page: int, size: int) -> dict:
+
+def search_films_query(
+        query_str: str,
+        page: int,
+        size: int) -> dict:
     return {
         "from": (page - 1) * size,
         "size": size,
@@ -27,7 +31,7 @@ def search_films_query(query_str: str,page: int, size: int) -> dict:
         "query": {
             "multi_match": {
                 "query": query_str,
-                "fields": ["title^2", "title.raw^5"],  # буст для точного совпадения
+                "fields": ["title^2", "title.raw^5"],
                 "operator": "AND",
                 "fuzziness": "1",
             }

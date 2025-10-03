@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Optional
 from models.film_short import FilmShort
 
+
 class Person(BaseModel):
     """
     Модель персоны (актёра, режиссёра или сценариста).

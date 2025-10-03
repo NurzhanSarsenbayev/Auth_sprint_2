@@ -8,15 +8,26 @@ from models.film_short import FilmShort
 from models.genre import Genre
 from models.person import Person
 
+
 class SearchService(BaseService):
-    def __init__(self, cache, search, film_service: FilmService, person_service: PersonService, genre_service: GenreService, ttl: int = 10):
+    def __init__(self,
+                 cache,
+                 search,
+                 film_service: FilmService,
+                 person_service: PersonService,
+                 genre_service: GenreService,
+                 ttl: int = 10):
         super().__init__(cache, search, ttl)
         self.film_service = film_service
         self.person_service = person_service
         self.genre_service = genre_service
 
-    async def search_all(self, query: str, page: int = 1, size: int = 50) -> Dict[str, Any]:
-        cache_key = self.make_cache_key("search_all", query=query, page=page, size=size)
+    async def search_all(self,
+                         query: str,
+                         page: int = 1,
+                         size: int = 50) -> Dict[str, Any]:
+        cache_key = self.make_cache_key(
+            "search_all", query=query, page=page, size=size)
 
         return await self.get_or_set_cache(
             cache_key,

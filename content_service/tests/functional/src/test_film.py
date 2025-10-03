@@ -1,5 +1,4 @@
 import pytest
-import pytest_asyncio
 from aiohttp import ClientSession
 from http import HTTPStatus
 from functional.settings import settings
@@ -16,13 +15,16 @@ async def test_film_validation(http_session: ClientSession, es_ready):
 
 
 @pytest.mark.asyncio
-async def test_get_film_by_id(http_session: ClientSession,es_ready):
+async def test_get_film_by_id(
+        http_session: ClientSession,
+        es_ready):
     # Arrange
     film_id = "900e93d9-21f2-4c62-b8d2-32de32110a16"
 
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/films/{film_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/films/{film_id}"
     ) as resp:
         data = await resp.json()
 
@@ -32,10 +34,11 @@ async def test_get_film_by_id(http_session: ClientSession,es_ready):
 
 
 @pytest.mark.asyncio
-async def test_get_all_films(http_session: ClientSession,es_ready):
+async def test_get_all_films(http_session: ClientSession, es_ready):
     # Act
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/films/?page=1&size=10"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/films/?page=1&size=10"
     ) as resp:
         data = await resp.json()
 
@@ -50,14 +53,18 @@ async def test_get_all_films(http_session: ClientSession,es_ready):
 
 
 @pytest.mark.asyncio
-async def test_film_cache(http_session: ClientSession, redis_client,es_ready):
+async def test_film_cache(
+        http_session: ClientSession,
+        redis_client,
+        es_ready):
     # Arrange
     film_id = "900e93d9-21f2-4c62-b8d2-32de32110a16"
     await redis_client.flushdb()
 
     # Act 1 (кэш пуст → идём в API)
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/films/{film_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/films/{film_id}"
     ) as resp1:
         data1 = await resp1.json()
 
@@ -68,7 +75,8 @@ async def test_film_cache(http_session: ClientSession, redis_client,es_ready):
 
     # Act 2 (повторный запрос → идём в кэш)
     async with http_session.get(
-        f"http://{settings.API_HOST}:{settings.API_PORT}/api/v1/films/{film_id}"
+        f"http://{settings.API_HOST}:"
+        f"{settings.API_PORT}/api/v1/films/{film_id}"
     ) as resp2:
         data2 = await resp2.json()
 

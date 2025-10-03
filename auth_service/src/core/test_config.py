@@ -2,14 +2,31 @@ from pydantic_settings import BaseSettings
 
 
 class TestSettings(BaseSettings):
-    db_user: str = "postgres"
-    db_password: str = "postgres"
-    db_host: str = "localhost"
-    db_port: int = 5433
-    db_name: str = "auth_test"
+    db_user: str
+    db_password: str
+    db_host: str
+    db_port: int
+    db_name: str
 
-    redis_host: str = "localhost"
-    redis_port: int = 6380
+    redis_host: str
+    redis_port: int
+
+    jwt_algorithm: str
+    jwt_private_key_path: str
+    jwt_public_key_path: str
+
+    yandex_client_id: str
+    yandex_client_secret: str
+    yandex_redirect_uri: str
+
+    google_client_id: str
+    google_client_secret: str
+    google_redirect_uri: str
+
+    rate_limit_window_sec: int = 0
+    rate_limit_max_requests: int = 9999
+
+    testing: bool = True
 
     @property
     def database_url(self) -> str:
@@ -19,9 +36,8 @@ class TestSettings(BaseSettings):
         )
 
     class Config:
-        env_prefix = "TEST_"   # 👈 автоматически подставляет TEST_*
         case_sensitive = False
-        env_file = ".env.test"  # 👈 будет читать переменные прямо из файла
+        env_file = ".env.test.auth"  # 👈 будет читать переменные прямо из файла
 
 
 test_settings = TestSettings()

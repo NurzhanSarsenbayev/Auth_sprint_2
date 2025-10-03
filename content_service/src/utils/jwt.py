@@ -1,13 +1,18 @@
 import json
 import httpx
-from jose import jwt, jwk
+import logging
+from jose import jwt
 from jose.utils import base64url_decode
-from fastapi import HTTPException
+from jose import JWTError, ExpiredSignatureError
+from fastapi import HTTPException, status
 
 from core.config import settings
 from db.protocols import CacheStorageProtocol
 
+
+logger = logging.getLogger(__name__)
 JWKS_CACHE_KEY = "auth:jwks"
+
 
 async def get_jwks(cache: CacheStorageProtocol) -> dict:
     """Получает JWKS из кэша или Auth Service"""
@@ -17,7 +22,8 @@ async def get_jwks(cache: CacheStorageProtocol) -> dict:
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(f"{settings.auth_url}/.well-known/jwks.json")
+            resp = await client.get(
+                f"{settings.auth_url}/.well-known/jwks.json")
             resp.raise_for_status()
             jwks = resp.json()
     except Exception:
@@ -29,28 +35,59 @@ async def get_jwks(cache: CacheStorageProtocol) -> dict:
 
 
 async def decode_token(token: str, cache: CacheStorageProtocol) -> dict:
-    jwks = await get_jwks(cache)
-    headers = jwt.get_unverified_header(token)
-    kid = headers.get("kid")
-
-    key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
-    if not key:
-        raise HTTPException(status_code=401, detail="Unknown key id")
-
     try:
+        jwks = await get_jwks(cache)
+        headers = jwt.get_unverified_header(token)
+        kid = headers.get("kid")
+
+        key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+        if not key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unknown key id")
+
+        if key["kty"] == "oct":
+            try:
+                secret = base64url_decode(key["k"].encode())
+            except Exception as e:
+                logger.error("Bad JWKS key encoding: %s", e)
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid secret encoding")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unsupported key type")
+
+        alg = key.get("alg", "HS256")
+
         payload = jwt.decode(
             token,
-            key,  # 👈 передаём сам словарь из JWKS
-            algorithms=["RS256"],
+            secret,
+            algorithms=[alg],
             options={"verify_aud": False},
         )
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired")
+    except JWTError as e:
+        logger.warning("JWTError: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token")
+    except HTTPException:
+        raise  # пробрасываем как есть
     except Exception as e:
-        print("❌ JWT decode error:", e)
-        raise HTTPException(status_code=401, detail="Invalid token")
+        logger.exception("Unexpected error in decode_token: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token")
 
     if payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Not an access token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not an access token")
 
     return payload

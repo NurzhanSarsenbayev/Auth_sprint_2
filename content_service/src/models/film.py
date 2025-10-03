@@ -6,8 +6,6 @@ from models.person import Person
 from models.genre import Genre
 
 
-
-
 class Film(BaseModel):
     """
     Полная информация о фильме, включая описание, рейтинг, жанры и участников.

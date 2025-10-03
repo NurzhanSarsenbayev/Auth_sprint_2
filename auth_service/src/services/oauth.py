@@ -7,8 +7,8 @@ from core.oauth.types import OAuthUserInfo
 from repositories.user import UserRepository
 from repositories.social_accounts import SocialAccountRepository
 from services.user import UserService
-from utils.security import hash_password
 from utils.jwt import create_access_token, create_refresh_token
+
 
 class OAuthService:
     def __init__(self, providers: Dict[str, OAuthProvider]):
@@ -19,11 +19,12 @@ class OAuthService:
             raise ValueError(f"Unknown provider: {name}")
         return self.providers[name]
 
-    def get_authorize_url(self, provider: str, state: str | None = None) -> str:
+    def get_authorize_url(self,
+                          provider: str,
+                          state: str | None = None) -> str:
         if state is None:
             state = secrets.token_urlsafe(16)
         return self.get_provider(provider).get_authorize_url(state=state)
-
 
     async def handle_callback(
         self,
@@ -72,7 +73,10 @@ class OAuthService:
             "provider": provider,
         }
 
-    async def unlink(self, provider: str, user_id: uuid.UUID, db: AsyncSession):
+    async def unlink(self,
+                     provider: str,
+                     user_id: uuid.UUID,
+                     db: AsyncSession):
         socials = SocialAccountRepository(db)
         await socials.unlink(user_id=user_id, provider=provider)
         await db.commit()

@@ -1,4 +1,6 @@
-from fastapi import Depends, Request,HTTPException, status
+import logging
+
+from fastapi import Depends, Request, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from db.protocols import SearchStorageProtocol, CacheStorageProtocol
 from services.films.films_service import FilmService
@@ -8,36 +10,43 @@ from services.global_search.search_service import SearchService
 from utils.jwt import decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login", auto_error=False)
+logger = logging.getLogger("app")
+
 
 # достаем storages из app.state
 def get_es_storage(request: Request) -> SearchStorageProtocol:
     return request.app.state.es_storage
 
+
 def get_redis_storage(request: Request) -> CacheStorageProtocol:
     return request.app.state.redis_storage
 
+
 # фабрики сервисов
+
 
 def get_film_service(
     es: SearchStorageProtocol = Depends(get_es_storage),
     cache: CacheStorageProtocol = Depends(get_redis_storage),
 ) -> FilmService:
-    return FilmService(cache=cache,search=es)
+    return FilmService(cache=cache, search=es)
 
 
 def get_person_service(
     es: SearchStorageProtocol = Depends(get_es_storage),
     cache: CacheStorageProtocol = Depends(get_redis_storage),
 ) -> PersonService:
-    return PersonService(cache=cache,search=es)
+    return PersonService(cache=cache, search=es)
 
 
 def get_genre_service(
     es: SearchStorageProtocol = Depends(get_es_storage),
     cache: CacheStorageProtocol = Depends(get_redis_storage),
 ) -> GenreService:
-    return GenreService(cache=cache,search=es)
+    return GenreService(cache=cache, search=es)
+
 
 def get_search_service(
     es: SearchStorageProtocol = Depends(get_es_storage),
@@ -54,38 +63,31 @@ def get_search_service(
         genre_service=genre_service,
     )
 
+
 async def get_current_principal(
     token: str | None = Depends(oauth2_scheme_optional),
     cache: CacheStorageProtocol = Depends(get_redis_storage),
 ):
-    print("👉 TOKEN:", token)
-
+    logger.info("👤 principal: вход. Есть ли токен? %s", bool(token))
     if not token:
-        print("⚠️ Нет токена, возвращаем guest")
-        return {"role": "guest"}
+        logger.info("👤 principal: нет токена → guest")
+        return "guest"
 
     try:
         payload = await decode_token(token, cache)
-        print("✅ Декод успешен:", payload)
     except HTTPException as e:
-        print(f"❌ Ошибка валидации токена: {e.detail} (status={e.status_code})")
-        # fallback на guest
-        if e.status_code in (
-            status.HTTP_401_UNAUTHORIZED,
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-        ):
-            return {"role": "guest"}
-        # остальные ошибки пробрасываем
+        logger.warning(
+            "👤 principal: decode_token поднял HTTPException %s (%s)",
+            e.status_code, e.detail)
+        if e.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
+            logger.info("👤 principal: graceful fallback на guest (503)")
+            return "guest"
         raise
-    except Exception as e:
-        # на случай неожиданных ошибок
-        import traceback
-        print("💥 Неожиданная ошибка при обработке токена:", repr(e))
-        print(traceback.format_exc())
-        return {"role": "guest"}
 
-    return {
+    principal = {
         "user_id": payload.get("sub"),
         "email": payload.get("email"),
         "role": "user",
     }
+    logger.info("👤 principal: отдаю пользователя %s", principal)
+    return principal

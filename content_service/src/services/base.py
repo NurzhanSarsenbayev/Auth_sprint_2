@@ -6,8 +6,12 @@ from db.redis_storage import RedisStorage
 
 T = TypeVar("T")
 
+
 class BaseService:
-    def __init__(self, cache: RedisStorage, search: ElasticsearchStorage, ttl: int = 3):
+    def __init__(self,
+                 cache: RedisStorage,
+                 search: ElasticsearchStorage,
+                 ttl: int = 3):
         self.cache = cache
         self.search = search
         self.ttl = ttl
@@ -20,7 +24,6 @@ class BaseService:
             except Exception:
                 return cached  # Pydantic raw или строка
         return None
-
 
     async def set_cache(self, key: str, value: Any) -> None:
         if hasattr(value, "json"):

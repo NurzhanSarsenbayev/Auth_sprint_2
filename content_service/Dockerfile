@@ -11,12 +11,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# requirements.txt лежит в content_service/
+COPY requirements.content.txt .
+RUN pip install --no-cache-dir -r requirements.content.txt
 
-COPY src /app/src
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# src и entrypoint.sh тоже в content_service/
+COPY src ./src
+COPY entrypoint.content.sh ./entrypoint.content.sh
+RUN chmod +x ./entrypoint.content.sh
 
 EXPOSE 8000
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.content.sh"]

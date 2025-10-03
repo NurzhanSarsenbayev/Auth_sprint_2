@@ -5,12 +5,14 @@ from opentelemetry import trace
 # --- Контекст для request_id ---
 request_id_ctx = contextvars.ContextVar("request_id", default="-")
 
+
 def _hex_trace_id():
     span = trace.get_current_span()
     ctx = span.get_span_context()
     if ctx and ctx.trace_id:
         return f"{ctx.trace_id:032x}"
     return "-"
+
 
 def _hex_span_id():
     span = trace.get_current_span()
@@ -19,12 +21,14 @@ def _hex_span_id():
         return f"{ctx.span_id:016x}"
     return "-"
 
+
 class RequestIdFilter(logging.Filter):
     def filter(self, record):
         record.request_id = request_id_ctx.get()
         record.trace_id = _hex_trace_id()
         record.span_id = _hex_span_id()
         return True
+
 
 LOG_FORMAT = ('%(asctime)s - %(name)s - %(levelname)s - '
               'trace_id=%(trace_id)s span_id=%(span_id)s '
@@ -50,7 +54,8 @@ LOGGING = {
         },
         'access': {
             '()': 'uvicorn.logging.AccessFormatter',
-            'fmt': "%(levelprefix)s %(client_addr)s - '%(request_line)s' %(status_code)s",
+            'fmt': "%(levelprefix)s %(client_addr)s "
+                   "- '%(request_line)s' %(status_code)s",
         },
     },
     'handlers': {

@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  test_postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: admin_test
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U test_user -d admin_test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test_net
+
+  admin_tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test.admin
+    env_file: .env.test.admin
+    depends_on:
+      test_postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+      python manage.py migrate --noinput &&
+      pytest -v
+      "
+    networks:
+      - test_net
+
+networks:
+  test_net:
