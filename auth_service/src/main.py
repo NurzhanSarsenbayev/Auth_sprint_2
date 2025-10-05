@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
     await close_redis(redis)
 
-telemetry.setup_tracing("auth_service")
+
 app = FastAPI(title="Auth Service", lifespan=lifespan)
 
 
@@ -59,7 +59,9 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 setup_logging()
-telemetry.instrument_app(app)
+if settings.enable_tracer:
+    telemetry.setup_tracing("auth_service")
+    telemetry.instrument_app(app)
 add_pagination(app)
 rules = [
     # Регистрация — жёстче

@@ -34,7 +34,15 @@ class Settings(BaseSettings):
     google_client_secret: str
     google_redirect_uri: str
 
+    # OpenTelemetry / Jaeger
+    otel_sampling_ratio: float
+    otel_service_name: str
+    otel_service_version: str
+    otel_environment: str
+    otel_exporter_otlp_endpoint: str
+
     testing: bool = False  # 👈 по умолчанию False
+    enable_tracer: bool = True
 
     rate_limit_window_sec: int = 60
     rate_limit_max_requests: int = 100

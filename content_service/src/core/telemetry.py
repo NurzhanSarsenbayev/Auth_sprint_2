@@ -1,6 +1,4 @@
-import os
 import logging
-
 from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -12,53 +10,47 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
 from requests.exceptions import ConnectionError as RequestsConnectionError
+from core.config import settings
 
 logger = logging.getLogger("app")
 
 
 def setup_tracing(service_name: str = "content_service"):
-    # Самплинг: в dev собираем всё (1.0). На проде можно 0.1
-    sampler = ParentBased(
-        TraceIdRatioBased(float(os.getenv("OTEL_SAMPLING_RATIO", "1.0"))))
+    sampler = ParentBased(TraceIdRatioBased(settings.otel_sampling_ratio))
 
     resource = Resource.create({
-        "service.name": os.getenv("OTEL_SERVICE_NAME", service_name),
+        "service.name": settings.otel_service_name or service_name,
         "service.version": "1.0.0",
-        "deployment.environment": os.getenv("ENVIRONMENT", "dev"),
+        "deployment.environment": settings.environment,
     })
 
     provider = TracerProvider(resource=resource, sampler=sampler)
     trace.set_tracer_provider(provider)
 
     exporter = OTLPSpanExporter(
-        endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT",
-                           "http://jaeger:4318/v1/traces"),
-        timeout=5
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        timeout=5,
     )
     provider.add_span_processor(BatchSpanProcessor(exporter))
+    logger.info(f"📡 OpenTelemetry инициализирован для {settings.otel_service_name}")
 
 
 def instrument_app(app):
-    # Добавляем атрибуты к span из request (включая твой x-request-id)
     def server_request_hook(span, scope):
         if not span:
             return
         headers = dict(scope.get("headers") or [])
-        # заголовки в ASGI — байты; ищем x-request-id
-        req_id = None
         for k, v in headers.items():
             if k.decode().lower() == "x-request-id":
-                req_id = v.decode()
+                span.set_attribute("request.id", v.decode())
                 break
-        if req_id:
-            span.set_attribute("request.id", req_id)
 
     FastAPIInstrumentor.instrument_app(
         app,
         server_request_hook=server_request_hook,
-        excluded_urls="(/health|/ping)"  # чтобы не флудить
+        excluded_urls="(/health|/ping)",
     )
-    # Инструментируем Redis и httpx ES
+
     RedisInstrumentor().instrument()
     HTTPXClientInstrumentor().instrument()
     ElasticsearchInstrumentor().instrument()

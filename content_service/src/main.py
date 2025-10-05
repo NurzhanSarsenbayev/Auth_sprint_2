@@ -87,7 +87,10 @@ async def lifespan(app: FastAPI):
     logger.info("✅ OpenTelemetry трассировка корректно остановлена")
 
 # --- Сначала трейсинг ---
-setup_tracing("content_service")
+if settings.enable_tracer:
+    setup_tracing(settings.otel_service_name)
+else:
+    logger.info("🚫 OpenTelemetry отключён (ENABLE_TRACER=False)")
 
 # --- FastAPI App ---
 app = FastAPI(

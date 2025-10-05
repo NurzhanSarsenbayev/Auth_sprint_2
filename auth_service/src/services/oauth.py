@@ -8,7 +8,7 @@ from repositories.user import UserRepository
 from repositories.social_accounts import SocialAccountRepository
 from services.user import UserService
 from utils.jwt import create_access_token, create_refresh_token
-
+from schemas.oauth import OAuthCallbackResponse
 
 class OAuthService:
     def __init__(self, providers: Dict[str, OAuthProvider]):
@@ -32,7 +32,7 @@ class OAuthService:
         code: str,
         db: AsyncSession,
         user_service: UserService,   # ⬅️ приняли сервис
-    ) -> dict:
+    ) -> OAuthCallbackResponse:
         prov = self.get_provider(provider)
 
         access_token = await prov.exchange_code_for_token(code)
@@ -65,14 +65,13 @@ class OAuthService:
         await db.commit()
 
         payload = {"sub": str(user.user_id), "email": user.email}
-        return {
-            "user_id": str(user.user_id),
-            "email": user.email,
-            "access_token": create_access_token(payload),
-            "refresh_token": create_refresh_token(payload),
-            "provider": provider,
-        }
-
+        return OAuthCallbackResponse(  # ✅ красиво и типизировано
+            user_id=str(user.user_id),
+            email=user.email,
+            access_token=create_access_token(payload),
+            refresh_token=create_refresh_token(payload),
+            provider=provider,
+        )
     async def unlink(self,
                      provider: str,
                      user_id: uuid.UUID,

@@ -23,10 +23,17 @@ class TestSettings(BaseSettings):
     google_client_secret: str
     google_redirect_uri: str
 
+    otel_sampling_ratio: float
+    otel_service_name: str
+    otel_service_version: str
+    otel_environment: str
+    otel_exporter_otlp_endpoint: str
+
     rate_limit_window_sec: int = 0
     rate_limit_max_requests: int = 9999
 
     testing: bool = True
+    enable_tracer: bool = False
 
     @property
     def database_url(self) -> str:

@@ -6,6 +6,6 @@ from typing import Optional
 class OAuthUserInfo:
     provider: str                # "yandex"
     provider_account_id: str     # уникальный ID у провайдера (data["id"])
-    email: Optional[str]
-    login: Optional[str]
-    name: Optional[str] = None
+    email: str | None
+    login: str | None
+    name: str | None = None
