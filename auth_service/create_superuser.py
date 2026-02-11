@@ -5,7 +5,6 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from core.config import settings
-from core.test_config import test_settings
 from models import User, Role, UserRole
 from utils.security import hash_password
 import os
@@ -18,6 +17,7 @@ def create_superuser(db_url: str | None = None):
 
     # 2. если переменная окружения TESTING=1 → берём test_settings
     elif os.getenv("TESTING", "0") == "1":
+        from core.test_config import test_settings  # <-- ВНУТРИ
         url = test_settings.database_url
 
     # 3. иначе → обычные settings

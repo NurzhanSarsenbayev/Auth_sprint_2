@@ -1,97 +1,38 @@
-version: "3.9"
-name: cinema_project
+name: auth_standalone
 
 services:
-  # --- Auth Service ---
   auth_service:
     build: ./auth_service
-    container_name: auth_service
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       - postgres_auth
-      - redis_shared
+      - redis
     env_file:
       - auth_service/.env.auth
 
   postgres_auth:
     image: postgres:16
-    container_name: postgres_auth
     restart: always
     env_file:
       - auth_service/.env.auth
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: auth
     ports:
       - "5433:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
 
-  # --- Content Service ---
-  content_service:
-    build: ./content_service
-    container_name: content_service
-    ports:
-      - "8002:8000"
-    volumes:
-      - ./content_service/src:/app/src
-      - ./content_service/etl:/app/etl
-      - ./content_service/data:/app/data
-    env_file:
-      - content_service/.env.content
-    depends_on:
-      - redis_shared
-      - elasticsearch
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "9200:9200"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # --- Shared Redis ---
-  redis_shared:
+  redis:
     image: redis:7
-    container_name: redis_shared
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.54
-    container_name: jaeger
-    ports:
-      - "16686:16686"   # UI
-      - "4318:4318"     # OTLP/HTTP traces
-
-  admin_service:
-    build: ./admin_panel
-    container_name: admin_service
-    env_file:
-      - ./admin_panel/.env.admin
-    working_dir: /app           # ВАЖНО
-    volumes:
-      - ./admin_panel:/app      # ВАЖНО — генерим файлы на хосте
-    ports:
-      - "8003:8000"
-    depends_on:
-      - postgres_auth
-    restart: unless-stopped
-    # ↓ включишь ПОТОМ, когда проект создан (config/manage.py есть)
-    command: python manage.py runserver 0.0.0.0:8000
 volumes:
   postgres_auth_data:
-  es_data:
   redis_data:

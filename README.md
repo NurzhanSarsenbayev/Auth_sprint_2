@@ -12,7 +12,34 @@
 Все сервисы запускаются в `docker-compose`.
 
 ---
+## Standalone Quickstart (Auth Service)
 
+> Current focus: standalone Auth Service (Docker Compose).
+> NOTE: at this stage the container entrypoint still applies migrations / seeds on boot.
+> This will be removed in PR2 (explicit commands only).
+
+### Requirements
+- Docker + Docker Compose v2
+
+### Run
+
+```bash
+cp auth_service/.env.auth.sample auth_service/.env.auth
+make up
+make health
+```
+Stop
+```bash
+make down
+```
+Ports
+Auth API: http://localhost:8000/docs
+
+Postgres: localhost:5433
+
+Redis: localhost:6380
+
+---
 ## 📂 Архитектура
 
 ```

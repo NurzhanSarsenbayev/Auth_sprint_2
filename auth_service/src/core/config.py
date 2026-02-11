@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-
+from pydantic import model_validator
+from typing import Optional
 
 class Settings(BaseSettings):
     db_user: str
@@ -26,23 +27,23 @@ class Settings(BaseSettings):
     rate_limit_window_sec: int
     rate_limit_max_requests: int
 
-    yandex_client_id: str
-    yandex_client_secret: str
-    yandex_redirect_uri: str
+    yandex_client_id: Optional[str] = None
+    yandex_client_secret: Optional[str] = None
+    yandex_redirect_uri: Optional[str] = None
 
-    google_client_id: str
-    google_client_secret: str
-    google_redirect_uri: str
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+    google_redirect_uri: Optional[str] = None
 
     # OpenTelemetry / Jaeger
-    otel_sampling_ratio: float
-    otel_service_name: str
-    otel_service_version: str
-    otel_environment: str
-    otel_exporter_otlp_endpoint: str
+    otel_sampling_ratio: float = 1.0
+    otel_service_name: str = "auth-service"
+    otel_service_version: str = "0.1.0"
+    otel_environment: str = "local"
+    otel_exporter_otlp_endpoint: Optional[str] = None
 
     testing: bool = False  # 👈 по умолчанию False
-    enable_tracer: bool = True
+    enable_tracer: bool = False
 
     rate_limit_window_sec: int = 60
     rate_limit_max_requests: int = 100
@@ -53,6 +54,12 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
+
+    @model_validator(mode="after")
+    def validate_optional_features(self):
+        if self.enable_tracer and not self.otel_exporter_otlp_endpoint:
+            raise ValueError("otel_exporter_otlp_endpoint is required when ENABLE_TRACER=true")
+        return self
 
     class Config:
         env_file = "auth_service/.env.auth"      # 👈 подхват переменных из .env

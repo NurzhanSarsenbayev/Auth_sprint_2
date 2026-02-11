@@ -21,6 +21,7 @@ venv.bak/
 .env
 .env.*
 !.env.auth.example
+!.env.auth.sample
 !.env.content.example
 !.env.admin.example
 !.env.test.auth.example

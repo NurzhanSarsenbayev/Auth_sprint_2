@@ -12,13 +12,9 @@ from models.social_account import SocialAccount
 
 sys.path.append("src")
 
+from core.config import Settings
 
-if os.getenv("TEST_TESTING") == "1":
-    from core.test_config import TestSettings
-    settings = TestSettings()
-else:
-    from core.config import Settings
-    settings = Settings()
+settings = Settings()
 
 
 config = context.config

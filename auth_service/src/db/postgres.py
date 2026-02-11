@@ -1,6 +1,4 @@
 from core.config import settings
-from core.test_config import test_settings
-
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from fastapi import Request
@@ -10,9 +8,7 @@ Base = declarative_base()
 
 def make_engine(db_url: str | None = None, echo: bool = False):
     """Создаёт async-движок под указанную базу."""
-    dsn = db_url or (
-        test_settings.database_url if settings.testing
-        else settings.database_url)
+    dsn = db_url or settings.database_url
     return create_async_engine(dsn, echo=echo, future=True)
 
 
