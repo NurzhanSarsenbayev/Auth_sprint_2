@@ -66,6 +66,7 @@ create-superuser:
 
 bootstrap: up migrate seed-roles health
 
+<<<<<<< pr5-ci
 test: test-up test-run test-down
 
 test-up:
@@ -103,3 +104,15 @@ typecheck:
 quality: fmt-check lint typecheck
 
 check: quality
+=======
+lint:
+	ruff check $(RUFF_PATHS)
+
+fmt:
+	ruff format $(RUFF_PATHS)
+
+mypy:
+	MYPYPATH=auth_service/src mypy $(MYPY_PATHS)
+
+check: lint mypy
+>>>>>>> main
