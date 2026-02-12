@@ -1,23 +1,31 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Ждём, пока Postgres поднимется
-echo "⏳ Waiting for Postgres..."
-until pg_isready -h test_postgres -p 5432 -U "$TEST_DB_USER"; do
+echo "[test-entrypoint] Waiting for Postgres..."
+until pg_isready -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}"; do
   sleep 1
 done
-echo "✅ Postgres is up"
+echo "[test-entrypoint] Postgres is ready"
 
-# Применяем миграции
-echo "🚀 Running migrations..."
-alembic -c alembic_test.ini upgrade head
+echo "[test-entrypoint] Waiting for Redis..."
+python - <<'PY'
+import os
+import socket
+import time
 
-# (опционально) Чистим БД перед тестами
-# psql -h test_postgres -U postgres -d test_auth_db -c "TRUNCATE TABLE users CASCADE;"
+host = os.environ.get("REDIS_HOST", "localhost")
+port = int(os.environ.get("REDIS_PORT", "6379"))
 
-echo "👑 Ensuring superuser exists..."
-python create_superuser.py
+deadline = time.time() + 60
+while time.time() < deadline:
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            print("[test-entrypoint] Redis port is open")
+            break
+    except OSError:
+        time.sleep(1)
+else:
+    raise SystemExit("[test-entrypoint] Redis is not ready in time")
+PY
 
-# Запускаем тесты
-echo "🧪 Running pytest..."
-pytest -vv --disable-warnings --maxfail=1
+exec "$@"

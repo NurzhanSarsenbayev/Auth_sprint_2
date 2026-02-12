@@ -1,28 +1,22 @@
-version: "3.9"
-
 services:
   test_postgres:
     image: postgres:16
-    container_name: auth_postgres_test
     env_file:
       - .env.test.auth
-#    ports:
-#      - "5433:5432"   # наружу открываем 5433, чтобы не конфликтовать с dev
     volumes:
       - test_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 5s
+      retries: 10
 
   test_redis:
     image: redis:7
-    container_name: auth_redis_test
     env_file:
       - .env.test.auth
-#    ports:
-#      - "6380:6379"   # наружу открываем 6380
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      retries: 5
+      test: [ "CMD", "redis-cli", "ping" ]
     volumes:
       - test_redis_data:/data
 
@@ -32,12 +26,11 @@ services:
       dockerfile: tests/Dockerfile.test.auth
       args:
         PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
-    container_name: auth_tests
     depends_on:
-      test_postgres:
-        condition: service_started
       test_redis:
-        condition: service_started
+        condition: service_healthy
+      test_postgres:
+        condition: service_healthy
     env_file:
       - .env.test.auth
     environment:
@@ -45,7 +38,7 @@ services:
       OTEL_TRACES_EXPORTER: "otlp"
       OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"
-    entrypoint: ["sh", "/app/tests/entrypoint.test.auth.sh"]
+    entrypoint: ["/usr/bin/env", "bash", "/app/tests/entrypoint.test.auth.sh"]
 
   jaeger:
     image: jaegertracing/all-in-one:1.57

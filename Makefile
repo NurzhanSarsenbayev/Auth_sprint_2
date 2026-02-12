@@ -1,6 +1,10 @@
 COMPOSE := docker compose
 ENV_FILE := auth_service/.env.auth
 
+TEST_COMPOSE_FILE := auth_service/tests/docker-compose.test.auth.yml
+TEST_COMPOSE := docker compose -f $(TEST_COMPOSE_FILE)
+
+.PHONY: test test-up test-run test-logs test-down
 .PHONY: help
 help:
 	@echo "Targets:"
@@ -55,3 +59,39 @@ create-superuser:
 	$(COMPOSE) exec auth_service python create_superuser.py
 
 bootstrap: up migrate seed-roles health
+
+test: test-up test-run test-down
+
+test-up:
+	$(TEST_COMPOSE) up -d --build test_postgres test_redis jaeger
+
+test-run:
+	$(TEST_COMPOSE) run --rm --no-deps tests bash -lc '\
+		alembic -c alembic_test.ini upgrade head \
+		&& SUPERUSER_PASSWORD=123 python create_superuser.py \
+		&& pytest -q \
+	'
+
+test-logs:
+	$(TEST_COMPOSE) logs -f --tail=200 tests
+
+test-down:
+	$(TEST_COMPOSE) down -v --remove-orphans
+
+# --- Quality ---
+.PHONY: fmt lint typecheck quality
+
+fmt:
+	ruff format .
+
+lint:
+	ruff check auth_service/src auth_service/*.py
+
+typecheck:
+	MYPYPATH=auth_service/src mypy \
+		auth_service/src/core \
+		auth_service/src/db \
+		auth_service/src/utils/jwt.py \
+		auth_service/src/utils/security.py
+
+quality: fmt lint typecheck
