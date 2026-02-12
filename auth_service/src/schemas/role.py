@@ -1,20 +1,20 @@
-from pydantic import BaseModel, ConfigDict, model_validator
-from uuid import UUID
-from typing import Optional
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class RoleCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class RoleRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     role_id: UUID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     created_at: datetime
 
 
@@ -27,14 +27,14 @@ class RoleResponse(BaseModel):
 
 class RoleUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
 
 
 # assign / remove / check
 class RoleAssignRequest(BaseModel):
     user_id: UUID
-    role_id: Optional[UUID] = None
+    role_id: UUID | None = None
 
     @model_validator(mode="after")
     def check_role(self):

@@ -1,11 +1,10 @@
-from pydantic import BaseModel
-from typing import List
 from models.film_short import FilmShort
-from models.person import Person
 from models.genre import Genre
+from models.person import Person
+from pydantic import BaseModel
 
 
 class SearchResults(BaseModel):
-    films: List[FilmShort] = []
-    persons: List[Person] = []
-    genres: List[Genre] = []
+    films: list[FilmShort] = []
+    persons: list[Person] = []
+    genres: list[Genre] = []

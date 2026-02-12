@@ -1,9 +1,10 @@
 # src/repositories/role_repo.py
-from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+import builtins
+
 from models import Role, UserRole
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class RoleRepository:
@@ -42,8 +43,7 @@ class RoleRepository:
 
     async def remove_role(self, user_id, role_id):
         q = await self.session.execute(
-            select(UserRole).where(UserRole.user_id == user_id,
-                                   UserRole.role_id == role_id)
+            select(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role_id)
         )
         user_role = q.scalar_one_or_none()
         if user_role:
@@ -52,10 +52,10 @@ class RoleRepository:
             return True
         return False
 
-    async def get_user_roles(self, user_id) -> List[str]:
+    async def get_user_roles(self, user_id) -> builtins.list[str]:
         q = await self.session.execute(
-            select(Role.name).join(UserRole,
-                                   UserRole.role_id == Role.role_id)
+            select(Role.name)
+            .join(UserRole, UserRole.role_id == Role.role_id)
             .where(UserRole.user_id == user_id)
         )
         return [r[0] for r in q.all()]

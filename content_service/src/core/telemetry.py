@@ -1,16 +1,17 @@
 import logging
+
+from core.config import settings
 from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.trace.sampling import TraceIdRatioBased, ParentBased
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.elasticsearch import ElasticsearchInstrumentor
+from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from requests.exceptions import ConnectionError as RequestsConnectionError
-from core.config import settings
 
 logger = logging.getLogger("app")
 
@@ -18,11 +19,13 @@ logger = logging.getLogger("app")
 def setup_tracing(service_name: str = "content_service"):
     sampler = ParentBased(TraceIdRatioBased(settings.otel_sampling_ratio))
 
-    resource = Resource.create({
-        "service.name": settings.otel_service_name or service_name,
-        "service.version": "1.0.0",
-        "deployment.environment": settings.environment,
-    })
+    resource = Resource.create(
+        {
+            "service.name": settings.otel_service_name or service_name,
+            "service.version": "1.0.0",
+            "deployment.environment": settings.environment,
+        }
+    )
 
     provider = TracerProvider(resource=resource, sampler=sampler)
     trace.set_tracer_provider(provider)

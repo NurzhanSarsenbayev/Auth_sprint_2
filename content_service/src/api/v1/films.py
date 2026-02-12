@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from typing import List
 from uuid import UUID
 
-from services.films.films_service import FilmService
 from dependencies import get_film_service
+from fastapi import APIRouter, Depends, HTTPException, Query
 from models.film import Film
 from models.film_short import FilmShort
+from services.films.films_service import FilmService
+
 router = APIRouter()
 
 
-@router.get("/", response_model=List[FilmShort])
+@router.get("/", response_model=list[FilmShort])
 async def list_films(
     page: int = Query(1, ge=1, description="Номер страницы"),
     size: int = Query(10, ge=1, description="Количество фильмов на странице"),
@@ -35,12 +35,11 @@ async def list_films(
     return films
 
 
-@router.get("/search", response_model=List[FilmShort])
+@router.get("/search", response_model=list[FilmShort])
 async def search_films(
     query: str = Query(
-        ...,
-        min_length=1,
-        description="Строка для полнотекстового поиска по названию фильма"),
+        ..., min_length=1, description="Строка для полнотекстового поиска по названию фильма"
+    ),
     page: int = Query(1, ge=1, description="Номер страницы поиска"),
     size: int = Query(10, ge=1, description="Количество результатов поиска"),
     film_service: FilmService = Depends(get_film_service),
@@ -60,11 +59,7 @@ async def search_films(
     Примечание:
         Результаты поиска кэшируются в Redis для ускорения повторных запросов.
     """
-    return await film_service.search_films(
-        query_str=query,
-        page=page,
-        size=size
-    )
+    return await film_service.search_films(query_str=query, page=page, size=size)
 
 
 @router.get("/{film_id}", response_model=Film)

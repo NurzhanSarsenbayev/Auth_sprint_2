@@ -1,6 +1,8 @@
-import json
 import asyncio
-from elasticsearch import AsyncElasticsearch, exceptions as es_exceptions
+import json
+
+from elasticsearch import AsyncElasticsearch
+from elasticsearch import exceptions as es_exceptions
 from redis.asyncio import Redis
 
 SCROLL_SIZE = 100
@@ -15,7 +17,7 @@ async def scroll_all_movies(elastic: AsyncElasticsearch, index: str):
         resp = await elastic.search(
             index=index,
             scroll=SCROLL_TIMEOUT,
-            body={"query": {"match_all": {}}, "size": SCROLL_SIZE}
+            body={"query": {"match_all": {}}, "size": SCROLL_SIZE},
         )
     except es_exceptions.NotFoundError:
         return
@@ -58,13 +60,9 @@ async def build_cache(elastic: AsyncElasticsearch, redis: Redis):
                         if p["uuid"] not in persons_cache:
                             persons_cache[p["uuid"]] = p["full_name"]
 
-            await redis.set(
-                "genres_cache", json.dumps(genres_cache), ex=CACHE_TTL)
-            await redis.set(
-                "persons_cache", json.dumps(persons_cache), ex=CACHE_TTL)
-            print(
-                f"Кэш построен: {len(genres_cache)}"
-                f" жанров и {len(persons_cache)} персон.")
+            await redis.set("genres_cache", json.dumps(genres_cache), ex=CACHE_TTL)
+            await redis.set("persons_cache", json.dumps(persons_cache), ex=CACHE_TTL)
+            print(f"Кэш построен: {len(genres_cache)} жанров и {len(persons_cache)} персон.")
 
             # Ждем час до следующего обновления
             await asyncio.sleep(3600)
@@ -74,10 +72,7 @@ async def build_cache(elastic: AsyncElasticsearch, redis: Redis):
             await asyncio.sleep(5)
 
 
-async def wait_for_elastic(
-        es: AsyncElasticsearch,
-        timeout: int = 60,
-        initial_delay: int = 30):
+async def wait_for_elastic(es: AsyncElasticsearch, timeout: int = 60, initial_delay: int = 30):
     """
     Ждём, пока Elasticsearch не станет доступен.
 

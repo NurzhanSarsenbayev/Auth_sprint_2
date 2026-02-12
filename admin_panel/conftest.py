@@ -1,22 +1,20 @@
-import pytest
-import uuid
-import time
 import base64
+import time
+import uuid
 
-from jose import jwt
+import pytest
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from cryptography.hazmat.primitives import serialization
+from jose import jwt
 
 # ===== RSA utils =====
 
 
 def _generate_rsa_keypair():
     """Создаём временную RSA пару (приватный/публичный ключ)."""
-    private_key = rsa.generate_private_key(
-        public_exponent=65537, key_size=2048
-    )
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     public_key = private_key.public_key()
     return private_key, public_key
 
@@ -76,6 +74,7 @@ def logged_client(client, admin_user):
 
 # ===== RSA keys fixture =====
 
+
 @pytest.fixture(scope="session")
 def rsa_keys():
     """RSA ключи — общие для всей тестовой сессии."""
@@ -84,6 +83,7 @@ def rsa_keys():
 
 
 # ===== JWT fixtures =====
+
 
 @pytest.fixture
 def admin_jwt_headers(rsa_keys):

@@ -1,17 +1,16 @@
 import logging
 
-from fastapi import Depends, Request, HTTPException, status
+from db.protocols import CacheStorageProtocol, SearchStorageProtocol
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from db.protocols import SearchStorageProtocol, CacheStorageProtocol
 from services.films.films_service import FilmService
-from services.persons.persons_service import PersonService
 from services.genres.genres_service import GenreService
 from services.global_search.search_service import SearchService
+from services.persons.persons_service import PersonService
 from utils.jwt import decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-oauth2_scheme_optional = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login", auto_error=False)
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 logger = logging.getLogger("app")
 
 
@@ -77,8 +76,8 @@ async def get_current_principal(
         payload = await decode_token(token, cache)
     except HTTPException as e:
         logger.warning(
-            "👤 principal: decode_token поднял HTTPException %s (%s)",
-            e.status_code, e.detail)
+            "👤 principal: decode_token поднял HTTPException %s (%s)", e.status_code, e.detail
+        )
         if e.status_code == status.HTTP_503_SERVICE_UNAVAILABLE:
             logger.info("👤 principal: graceful fallback на guest (503)")
             return "guest"

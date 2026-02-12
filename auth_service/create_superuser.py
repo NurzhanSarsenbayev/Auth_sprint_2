@@ -1,13 +1,13 @@
 import argparse
+import os
 import uuid
 from datetime import datetime
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
 
 from core.config import settings
-from models import User, Role, UserRole
+from models import Role, User, UserRole
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 from utils.security import hash_password
-import os
 
 
 def create_superuser(db_url: str | None = None):
@@ -18,6 +18,7 @@ def create_superuser(db_url: str | None = None):
     # 2. если переменная окружения TESTING=1 → берём test_settings
     elif os.getenv("TESTING", "0") == "1":
         from core.test_config import test_settings  # <-- ВНУТРИ
+
         url = test_settings.database_url
 
     # 3. иначе → обычные settings
@@ -59,9 +60,7 @@ def create_superuser(db_url: str | None = None):
             session.flush()
 
         # проверяем, есть ли роль admin
-        role = session.execute(
-            select(Role).where(Role.name == "admin")
-        ).scalar_one_or_none()
+        role = session.execute(select(Role).where(Role.name == "admin")).scalar_one_or_none()
 
         if not role:
             role = Role(
@@ -95,8 +94,7 @@ def create_superuser(db_url: str | None = None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Create superuser in database")
+    parser = argparse.ArgumentParser(description="Create superuser in database")
     parser.add_argument("--db", type=str, help="Database URL (optional)")
     args = parser.parse_args()
 

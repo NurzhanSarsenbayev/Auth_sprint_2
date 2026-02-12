@@ -1,5 +1,6 @@
 import json
-from typing import Any, Callable, Awaitable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
 
 from db.es_storage import ElasticsearchStorage
 from db.redis_storage import RedisStorage
@@ -8,10 +9,7 @@ T = TypeVar("T")
 
 
 class BaseService:
-    def __init__(self,
-                 cache: RedisStorage,
-                 search: ElasticsearchStorage,
-                 ttl: int = 3):
+    def __init__(self, cache: RedisStorage, search: ElasticsearchStorage, ttl: int = 3):
         self.cache = cache
         self.search = search
         self.ttl = ttl

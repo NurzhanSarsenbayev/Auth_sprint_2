@@ -1,17 +1,17 @@
-from fastapi import HTTPException, Response
-from sqlalchemy.ext.asyncio import AsyncSession
-import redis.asyncio as Redis
 from http import HTTPStatus
 
+import redis.asyncio as Redis
+from core.config import settings
+from fastapi import HTTPException, Response
+from models import User
+from schemas.auth import TokenPair  # 👈 добавляем импорт
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.jwt import (
     create_access_token,
     create_refresh_token,
     decode_token,
     get_token_ttl,
 )
-from models import User
-from core.config import settings
-from schemas.auth import TokenPair  # 👈 добавляем импорт
 
 
 # ---------- Token issuing ----------

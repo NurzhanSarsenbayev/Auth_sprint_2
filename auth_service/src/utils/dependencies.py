@@ -1,33 +1,30 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import redis.asyncio as redis
-
+from core.oauth.providers.google import GoogleOAuthProvider
+from core.oauth.providers.yandex import YandexOAuthProvider
 from db.postgres import get_session
 from db.redis_db import get_redis
-from repositories.user import UserRepository
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from models import Role, User
 from repositories.role import RoleRepository
+from repositories.user import UserRepository
 from repositories.user_role import UserRoleRepository
-from services.user import UserService
-from services.role import RoleService
-from services.auth import AuthService
-from services.user_role import UserRoleService
-from services.oauth import OAuthService
-from schemas.user import CurrentUserResponse
 from schemas.role import RoleResponse
-from models import User, Role
+from schemas.user import CurrentUserResponse
+from services.auth import AuthService
+from services.oauth import OAuthService
+from services.role import RoleService
+from services.user import UserService
+from services.user_role import UserRoleService
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from utils.jwt import decode_token
-from core.oauth.providers.yandex import YandexOAuthProvider
-from core.oauth.providers.google import GoogleOAuthProvider
 
 # =============================
 # OAuth2 Schemes
 # =============================
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-oauth2_scheme_optional = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login", auto_error=False
-)
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
 # =============================
@@ -50,22 +47,18 @@ async def _get_user_from_token(
     if payload.get("type") != "access":
         return None
 
-    result = await session.execute(
-        select(User).where(User.user_id == payload.get("sub"))
-    )
+    result = await session.execute(select(User).where(User.user_id == payload.get("sub")))
     return result.scalar_one_or_none()
 
 
 # =============================
 # Repo providers
 # =============================
-async def get_user_repo(
-        session: AsyncSession = Depends(get_session)) -> UserRepository:
+async def get_user_repo(session: AsyncSession = Depends(get_session)) -> UserRepository:
     return UserRepository(session)
 
 
-async def get_role_repo(
-        session: AsyncSession = Depends(get_session)) -> RoleRepository:
+async def get_role_repo(session: AsyncSession = Depends(get_session)) -> RoleRepository:
     return RoleRepository(session)
 
 
@@ -103,8 +96,7 @@ def get_user_role_service(
 # =============================
 # Auth dependencies
 # =============================
-async def _build_guest_principal(
-        session: AsyncSession) -> CurrentUserResponse:
+async def _build_guest_principal(session: AsyncSession) -> CurrentUserResponse:
     """Вернёт текущего пользователя-гостя (если нет валидного токена)."""
     # Пытаемся найти роль 'guest' (через репозиторий или прямым запросом)
     try:
@@ -115,13 +107,11 @@ async def _build_guest_principal(
 
     if guest_role is None:
         # надёжный fallback: прямой select
-        res = await session.execute(
-            select(Role).where(Role.name == "guest"))
+        res = await session.execute(select(Role).where(Role.name == "guest"))
         guest_role = res.scalar_one_or_none()
 
     roles = [RoleResponse.from_orm(guest_role)] if guest_role else []
-    return CurrentUserResponse(
-        id=None, username="guest", email=None, roles=roles)
+    return CurrentUserResponse(id=None, username="guest", email=None, roles=roles)
 
 
 async def get_current_principal(
@@ -167,6 +157,7 @@ async def get_current_principal(
 # Оставляем строгую зависимость
 # для тех маршрутов, где нужен именно ORM-пользователь:
 
+
 async def get_current_user(
     session: AsyncSession = Depends(get_session),
     redis: redis.Redis = Depends(get_redis),
@@ -175,15 +166,13 @@ async def get_current_user(
     try:
         payload = await decode_token(token, redis=redis)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid authentication")
+        raise HTTPException(status_code=401, detail="Invalid authentication") from None
 
     if payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Invalid authentication")
+        raise HTTPException(status_code=401, detail="Invalid authentication") from None
 
     user_id = payload.get("sub")
-    result = await session.execute(
-        select(User).where(User.user_id == user_id)
-    )
+    result = await session.execute(select(User).where(User.user_id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid authentication")
@@ -192,6 +181,7 @@ async def get_current_user(
 
 def get_current_user_with_roles(required_roles: list[str]):
     """Декоратор-зависимость: проверка ролей."""
+
     async def dependency(
         token: str = Depends(oauth2_scheme),
         session: AsyncSession = Depends(get_session),
@@ -211,8 +201,7 @@ def get_current_user_with_roles(required_roles: list[str]):
         if not any(req in role_names for req in required_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient permissions."
-                       f" Required: {required_roles}, found: {role_names}",
+                detail=f"Insufficient permissions. Required: {required_roles}, found: {role_names}",
             )
 
         return user

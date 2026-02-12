@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from uuid import UUID
-from typing import Optional
+
+from pydantic import BaseModel
 
 
 class FilmShort(BaseModel):
@@ -12,6 +12,7 @@ class FilmShort(BaseModel):
         title (str): Название фильма.
         imdb_rating (Optional[float]): Рейтинг IMDb (может отсутствовать).
     """
+
     uuid: UUID
     title: str
-    imdb_rating: Optional[float] = None
+    imdb_rating: float | None = None

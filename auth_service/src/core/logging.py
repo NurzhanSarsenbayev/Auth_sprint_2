@@ -1,5 +1,5 @@
-import logging
 import contextvars
+import logging
 
 request_id_ctx = contextvars.ContextVar("request_id", default="-")
 
@@ -11,19 +11,15 @@ class RequestIdFilter(logging.Filter):
 
 
 def setup_logging():
-    log_format = ("%(asctime)s "
-                  "| %(levelname)s |"
-                  " %(name)s |"
-                  " req_id=%(request_id)s |"
-                  " %(message)s")
+    log_format = "%(asctime)s | %(levelname)s | %(name)s | req_id=%(request_id)s | %(message)s"
 
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter(log_format))
     handler.addFilter(RequestIdFilter())
 
-    app_logger = logging.getLogger("app")   # 👈 отдельный логгер
+    app_logger = logging.getLogger("app")  # 👈 отдельный логгер
     app_logger.setLevel(logging.INFO)
     app_logger.addHandler(handler)
-    app_logger.propagate = False            # 👈 чтобы не уходило в root/uvicorn
+    app_logger.propagate = False  # 👈 чтобы не уходило в root/uvicorn
 
     return app_logger

@@ -1,7 +1,6 @@
-import httpx
 from urllib.parse import quote
-from typing import Optional
 
+import httpx
 from core.config import settings
 from core.oauth.interfaces import OAuthProvider
 from core.oauth.types import OAuthUserInfo
@@ -14,8 +13,14 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 class GoogleOAuthProvider(OAuthProvider):
     name = "google"
 
-    def get_authorize_url(self, state: Optional[str] = None) -> str:
-        redirect = quote(settings.google_redirect_uri, safe="")
+    def get_authorize_url(self, state: str | None = None) -> str:
+        if not settings.google_client_id:
+            raise ValueError("GOOGLE_CLIENT_ID is required")
+        redirect_uri = settings.google_redirect_uri
+        if not redirect_uri:
+            raise ValueError("GOOGLE_REDIRECT_URI is required")
+
+        redirect = quote(redirect_uri, safe="")
         base = (
             f"{GOOGLE_AUTH_URL}"
             f"?response_type=code"
@@ -29,6 +34,11 @@ class GoogleOAuthProvider(OAuthProvider):
 
     async def exchange_code_for_token(self, code: str) -> str:
         async with httpx.AsyncClient(timeout=10) as client:
+            if not settings.google_client_secret:
+                raise ValueError("GOOGLE_CLIENT_SECRET is required")
+            redirect_uri = settings.google_redirect_uri
+            if not redirect_uri:
+                raise ValueError("GOOGLE_REDIRECT_URI is required")
             resp = await client.post(
                 GOOGLE_TOKEN_URL,
                 data={

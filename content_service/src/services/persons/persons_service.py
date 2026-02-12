@@ -1,21 +1,19 @@
-from typing import List, Optional
 from uuid import UUID
 
-from src.services.base import BaseService
 from models.person import Person
-
-from services.persons.persons_fetchers import (fetch_persons_paginated,
-                                               fetch_person_by_id,
-                                               fetch_person_by_name)
+from services.persons.persons_fetchers import (
+    fetch_person_by_id,
+    fetch_person_by_name,
+    fetch_persons_paginated,
+)
+from src.services.base import BaseService
 
 
 class PersonService(BaseService):
     def __init__(self, cache, search, ttl: int = 300):
         super().__init__(cache, search, ttl)
 
-    async def list_persons(self,
-                           size: int = 100,
-                           page: int = 1) -> List[Person]:
+    async def list_persons(self, size: int = 100, page: int = 1) -> list[Person]:
 
         cache_key = self.make_cache_key("list_persons", page=page, size=size)
 
@@ -26,7 +24,7 @@ class PersonService(BaseService):
             deserializer=lambda cached: [Person(**p) for p in cached],
         )
 
-    async def get_person_by_id(self, person_id: UUID) -> Optional[Person]:
+    async def get_person_by_id(self, person_id: UUID) -> Person | None:
         cache_key = self.make_cache_key("id_persons", person_id=person_id)
 
         return await self.get_or_set_cache(
@@ -36,7 +34,7 @@ class PersonService(BaseService):
             deserializer=lambda cached: Person(**cached) if cached else None,
         )
 
-    async def search_persons(self, query_str: str) -> List[Person]:
+    async def search_persons(self, query_str: str) -> list[Person]:
         cache_key = self.make_cache_key("search_persons", query=query_str)
 
         return await self.get_or_set_cache(

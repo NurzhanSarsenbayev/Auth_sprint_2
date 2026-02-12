@@ -12,13 +12,16 @@ loader.py
 import json
 import os
 import time
+
 from elasticsearch import Elasticsearch, helpers
 
 # --- Конфигурация ---
-ES_HOST = (f"http://{os.getenv('ELASTIC_HOST', 'elasticsearch')}"
-           f":{os.getenv('ELASTIC_PORT', '9200')}")  # Хост Elasticsearch
-INDEX_NAME = "movies"                     # Имя индекса
-BULK_FILE = "data/movies_data_v2.json"   # Путь к bulk-файлу
+ES_HOST = (
+    f"http://{os.getenv('ELASTIC_HOST', 'elasticsearch')}"
+    f":{os.getenv('ELASTIC_PORT', '9200')}"
+)  # Хост Elasticsearch
+INDEX_NAME = "movies"  # Имя индекса
+BULK_FILE = "data/movies_data_v2.json"  # Путь к bulk-файлу
 
 # --- Подключение к Elasticsearch ---
 es = Elasticsearch(ES_HOST)
@@ -40,7 +43,7 @@ def wait_for_es(es: Elasticsearch, retries: int = 10, delay: int = 5):
         if es.ping():
             print("✅ Elasticsearch is up!")
             return True
-        print(f"⏳ Elasticsearch not ready, retry {i+1}/{retries}...")
+        print(f"⏳ Elasticsearch not ready, retry {i + 1}/{retries}...")
         time.sleep(delay)
     raise RuntimeError("Elasticsearch is not available after waiting")
 
@@ -53,7 +56,7 @@ def create_index():
     wait_for_es(es)
 
     # Загружаем mapping
-    with open("data/movies_mapping_v2.json", "r", encoding="utf-8") as f:
+    with open("data/movies_mapping_v2.json", encoding="utf-8") as f:
         mapping = json.load(f)
 
     if es.indices.exists(index=INDEX_NAME):
@@ -72,16 +75,16 @@ def load_bulk(file_path: str):
         file_path: путь к файлу с bulk-данными
     """
     actions = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
         for i in range(0, len(lines), 2):
             action_line = json.loads(lines[i].strip())
-            doc_line = json.loads(lines[i+1].strip())
+            doc_line = json.loads(lines[i + 1].strip())
             action = {
                 "_op_type": "index",
                 "_index": INDEX_NAME,
                 "_id": action_line["index"]["_id"],
-                "_source": doc_line
+                "_source": doc_line,
             }
             actions.append(action)
 
@@ -96,6 +99,6 @@ def load_bulk(file_path: str):
 
 if __name__ == "__main__":
     create_index()
-    print('Index created')
+    print("Index created")
     load_bulk(BULK_FILE)
     print("Bulk load finished!")

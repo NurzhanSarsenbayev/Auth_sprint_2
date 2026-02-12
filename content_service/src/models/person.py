@@ -1,7 +1,7 @@
-from pydantic import BaseModel
 from uuid import UUID
-from typing import Optional
+
 from models.film_short import FilmShort
+from pydantic import BaseModel
 
 
 class Person(BaseModel):
@@ -15,7 +15,8 @@ class Person(BaseModel):
         (например, "actor", "director", "writer"). Может быть None.
         films (list[FilmShort]): Список фильмов где они учавствовали.
     """
+
     uuid: UUID
     full_name: str
-    role: Optional[str] = None
+    role: str | None = None
     films: list[FilmShort] = []

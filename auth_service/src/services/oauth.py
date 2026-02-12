@@ -1,17 +1,18 @@
-import uuid
 import secrets
-from typing import Dict
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
+
 from core.oauth.interfaces import OAuthProvider
 from core.oauth.types import OAuthUserInfo
-from repositories.user import UserRepository
 from repositories.social_accounts import SocialAccountRepository
-from services.user import UserService
-from utils.jwt import create_access_token, create_refresh_token
+from repositories.user import UserRepository
 from schemas.oauth import OAuthCallbackResponse
+from services.user import UserService
+from sqlalchemy.ext.asyncio import AsyncSession
+from utils.jwt import create_access_token, create_refresh_token
+
 
 class OAuthService:
-    def __init__(self, providers: Dict[str, OAuthProvider]):
+    def __init__(self, providers: dict[str, OAuthProvider]):
         self.providers = providers
 
     def get_provider(self, name: str) -> OAuthProvider:
@@ -19,9 +20,7 @@ class OAuthService:
             raise ValueError(f"Unknown provider: {name}")
         return self.providers[name]
 
-    def get_authorize_url(self,
-                          provider: str,
-                          state: str | None = None) -> str:
+    def get_authorize_url(self, provider: str, state: str | None = None) -> str:
         if state is None:
             state = secrets.token_urlsafe(16)
         return self.get_provider(provider).get_authorize_url(state=state)
@@ -31,7 +30,7 @@ class OAuthService:
         provider: str,
         code: str,
         db: AsyncSession,
-        user_service: UserService,   # ⬅️ приняли сервис
+        user_service: UserService,  # ⬅️ приняли сервис
     ) -> OAuthCallbackResponse:
         prov = self.get_provider(provider)
 
@@ -72,10 +71,8 @@ class OAuthService:
             refresh_token=create_refresh_token(payload),
             provider=provider,
         )
-    async def unlink(self,
-                     provider: str,
-                     user_id: uuid.UUID,
-                     db: AsyncSession):
+
+    async def unlink(self, provider: str, user_id: uuid.UUID, db: AsyncSession):
         socials = SocialAccountRepository(db)
         await socials.unlink(user_id=user_id, provider=provider)
         await db.commit()

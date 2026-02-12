@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional, List
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -26,7 +25,7 @@ class UserRead(BaseModel):
 class UserResponse(BaseModel):
     user_id: UUID = Field(alias="id")
     username: str
-    roles: List[RoleResponse] = Field(default_factory=list)
+    roles: list[RoleResponse] = Field(default_factory=list)
 
     model_config = {
         "from_attributes": True,
@@ -35,10 +34,10 @@ class UserResponse(BaseModel):
 
 
 class CurrentUserResponse(BaseModel):
-    user_id: Optional[UUID] = Field(alias="id", default=None)
+    user_id: UUID | None = Field(alias="id", default=None)
     username: str
-    email: Optional[EmailStr] = None
-    roles: List[RoleResponse] = Field(default_factory=list)
+    email: EmailStr | None = None
+    roles: list[RoleResponse] = Field(default_factory=list)
 
     model_config = {
         "from_attributes": True,
@@ -50,8 +49,8 @@ class CurrentUserResponse(BaseModel):
 class LoginHistoryItem(BaseModel):
     user_id: UUID
     login_time: datetime
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
+    ip_address: str | None = None
+    user_agent: str | None = None
     successful: bool
 
     model_config = {
@@ -61,9 +60,9 @@ class LoginHistoryItem(BaseModel):
 
 # ----- auth/update -----
 class UserUpdateRequest(BaseModel):
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    old_password: Optional[str] = Field(None, min_length=3, max_length=50)
-    new_password: Optional[str] = Field(None, min_length=3)
+    username: str | None = Field(None, min_length=3, max_length=50)
+    old_password: str | None = Field(None, min_length=3, max_length=50)
+    new_password: str | None = Field(None, min_length=3)
 
 
 class UserUpdateResponse(BaseModel):

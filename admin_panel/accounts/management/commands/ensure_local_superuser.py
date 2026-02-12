@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
@@ -10,11 +10,7 @@ class Command(BaseCommand):
         username = "localadmin"
         password = "localadmin"
         if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(username=username,
-                                          email="",
-                                          password=password)
-            self.stdout.write(self.style.SUCCESS
-                              ("Created local superuser localadmin/localadmin")
-                              )
+            User.objects.create_superuser(username=username, email="", password=password)
+            self.stdout.write(self.style.SUCCESS("Created local superuser localadmin/localadmin"))
         else:
             self.stdout.write("Local superuser already exists")

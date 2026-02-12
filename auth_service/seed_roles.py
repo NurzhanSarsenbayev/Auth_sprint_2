@@ -1,11 +1,11 @@
 import argparse
 import uuid
 from datetime import datetime
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
 
 from core.config import settings
 from models import Role
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 
 def seed(db_url: str | None = None):
@@ -21,14 +21,10 @@ def seed(db_url: str | None = None):
             ("moderator", "Moderator"),
             ("guest", "Anonymous / guest"),
         ]:
-            role = session.execute(
-                select(Role).where(Role.name == name)).scalar_one_or_none()
+            role = session.execute(select(Role).where(Role.name == name)).scalar_one_or_none()
             if not role:
                 role = Role(
-                    role_id=uuid.uuid4(),
-                    name=name,
-                    description=desc,
-                    created_at=datetime.utcnow()
+                    role_id=uuid.uuid4(), name=name, description=desc, created_at=datetime.utcnow()
                 )
                 session.add(role)
         session.commit()
