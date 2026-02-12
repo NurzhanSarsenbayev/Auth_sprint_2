@@ -41,7 +41,7 @@ class UserRoleService(BaseService):
         if result.rowcount == 0:
             raise HTTPException(
                 status_code=HTTPStatus.NOT_FOUND,
-                detail="Assignment not found"
+                detail="Role assignment not found"
             )
 
         if self.redis:

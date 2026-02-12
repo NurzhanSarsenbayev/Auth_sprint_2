@@ -50,7 +50,7 @@ services:
 
   tests:
     build:
-      context: ../..                # корень проекта (Auth_sprint_2)
+      context: ../..                # repository root
       dockerfile: content_service/tests/Dockerfile.test.content
     container_name: functional_tests
     depends_on:

@@ -84,9 +84,9 @@ make down
 
 ## Documentation
 
-* `docs/ARCHITECTURE.md` — system overview and key flows
-* `docs/OPERATIONS.md` — operational guide (runbooks, troubleshooting)
-* `docs/SECURITY.md` — key handling, trust boundaries, security notes
+* `docs/ARCHITECTURE.md` - system overview and key flows
+* `docs/OPERATIONS.md` - operational guide (runbooks, troubleshooting)
+* `docs/SECURITY.md` - key handling, trust boundaries, security notes
 
 ---
 
