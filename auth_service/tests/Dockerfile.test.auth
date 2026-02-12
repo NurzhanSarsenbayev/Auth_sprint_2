@@ -19,9 +19,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.auth.txt
 
 # ---- потом тестовые (очень быстрые) ----
-COPY tests/requirements.test.auth.txt .
+COPY tests/requirements.test.auth.txt tests/requirements.test.auth.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements.test.auth.txt
+    pip install --no-cache-dir -r tests/requirements.test.auth.txt
 
 # ---- копируем весь код ----
 COPY . .
