@@ -1,6 +1,7 @@
 services:
   test_postgres:
     image: postgres:16
+    container_name: auth_postgres_test
     env_file:
       - .env.test.auth
     volumes:
@@ -12,6 +13,7 @@ services:
 
   test_redis:
     image: redis:7
+    container_name: auth_redis_test
     env_file:
       - .env.test.auth
     command: ["redis-server", "--save", "", "--appendonly", "no"]
