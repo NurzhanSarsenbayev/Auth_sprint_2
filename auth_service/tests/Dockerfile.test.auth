@@ -1,5 +1,5 @@
-# tests/Dockerfile.test.auth
-FROM python:3.11-bullseye
+ARG PYTHON_VERSION=3.11
+FROM python:${PYTHON_VERSION}-bullseye
 
 WORKDIR /app
 
