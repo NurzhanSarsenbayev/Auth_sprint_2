@@ -1,10 +1,11 @@
+import logging
 import time
 import uuid
-import logging
+
+from core.logger import request_id_ctx
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from core.logger import request_id_ctx
 
 logger = logging.getLogger("app")
 

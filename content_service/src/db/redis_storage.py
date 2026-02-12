@@ -1,5 +1,6 @@
+from typing import Any
+
 import redis.asyncio as redis
-from typing import Any, Optional
 
 from .protocols import CacheStorageProtocol
 
@@ -9,7 +10,7 @@ class RedisStorage(CacheStorageProtocol):
 
     def __init__(self, redis_url: str):
         self._redis_url = redis_url
-        self._redis: Optional[redis.Redis] = None
+        self._redis: redis.Redis | None = None
 
     async def connect(self):
         """Создать подключение к Redis."""
@@ -24,15 +25,12 @@ class RedisStorage(CacheStorageProtocol):
         if self._redis:
             await self._redis.close()
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         if not self._redis:
             raise RuntimeError("Redis is not connected")
         return await self._redis.get(key)
 
-    async def set(self,
-                  key: str,
-                  value: Any,
-                  expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: Any, expire: int | None = None) -> None:
         if not self._redis:
             raise RuntimeError("Redis is not connected")
         await self._redis.set(key, value, ex=expire)

@@ -1,5 +1,11 @@
 COMPOSE := docker compose
 ENV_FILE := auth_service/.env.auth
+RUFF_PATHS := auth_service/src auth_service/*.py
+MYPY_PATHS := \
+  auth_service/src/core \
+  auth_service/src/db \
+  auth_service/src/utils/jwt.py \
+  auth_service/src/utils/security.py
 
 TEST_COMPOSE_FILE := auth_service/tests/docker-compose.test.auth.yml
 TEST_COMPOSE := docker compose -f $(TEST_COMPOSE_FILE)
@@ -79,6 +85,37 @@ test-down:
 	$(TEST_COMPOSE) down -v --remove-orphans
 
 # --- Quality ---
+
+lint:
+	ruff check $(RUFF_PATHS)
+
+fmt:
+	ruff format $(RUFF_PATHS)
+
+mypy:
+	MYPYPATH=auth_service/src mypy $(MYPY_PATHS)
+
+check: lint mypy
+
+test: test-up test-run test-down
+
+test-up:
+	$(TEST_COMPOSE) up -d --build test_postgres test_redis jaeger
+
+test-run:
+	$(TEST_COMPOSE) run --rm --no-deps tests bash -lc '\
+		alembic -c alembic_test.ini upgrade head \
+		&& SUPERUSER_PASSWORD=123 python create_superuser.py \
+		&& pytest -q \
+	'
+
+test-logs:
+	$(TEST_COMPOSE) logs -f --tail=200 tests
+
+test-down:
+	$(TEST_COMPOSE) down -v --remove-orphans
+
+# --- Quality ---
 .PHONY: fmt lint typecheck quality
 
 fmt:
@@ -95,3 +132,14 @@ typecheck:
 		auth_service/src/utils/security.py
 
 quality: fmt lint typecheck
+
+lint:
+	ruff check $(RUFF_PATHS)
+
+fmt:
+	ruff format $(RUFF_PATHS)
+
+mypy:
+	MYPYPATH=auth_service/src mypy $(MYPY_PATHS)
+
+check: lint mypy

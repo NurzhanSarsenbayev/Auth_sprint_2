@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Index, desc
+
+from db.postgres import Base
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from db.postgres import Base
 
 
 class LoginHistory(Base):
@@ -16,13 +17,8 @@ class LoginHistory(Base):
     )
 
     # составной PK как в БД
-    id = Column(UUID(as_uuid=True),
-                primary_key=True,
-                default=uuid.uuid4,
-                nullable=False)
-    login_time = Column(DateTime, primary_key=True,
-                        default=datetime.utcnow,
-                        nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
+    login_time = Column(DateTime, primary_key=True, default=datetime.utcnow, nullable=False)
 
     user_id = Column(
         UUID(as_uuid=True),
@@ -35,5 +31,6 @@ class LoginHistory(Base):
     user = relationship("User", back_populates="login_history")
 
     def __repr__(self) -> str:
-        return (f"<LoginHistory id={self.id} user_id={self.user_id}"
-                f" at={self.login_time.isoformat()}>")
+        return (
+            f"<LoginHistory id={self.id} user_id={self.user_id} at={self.login_time.isoformat()}>"
+        )

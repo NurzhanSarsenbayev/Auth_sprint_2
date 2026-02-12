@@ -1,14 +1,12 @@
 import json
-import httpx
 import logging
-from jose import jwt
-from jose.utils import base64url_decode
-from jose import JWTError, ExpiredSignatureError
-from fastapi import HTTPException, status
 
+import httpx
 from core.config import settings
 from db.protocols import CacheStorageProtocol
-
+from fastapi import HTTPException, status
+from jose import ExpiredSignatureError, JWTError, jwt
+from jose.utils import base64url_decode
 
 logger = logging.getLogger(__name__)
 JWKS_CACHE_KEY = "auth:jwks"
@@ -22,8 +20,7 @@ async def get_jwks(cache: CacheStorageProtocol) -> dict:
 
     try:
         async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(
-                f"{settings.auth_url}/.well-known/jwks.json")
+            resp = await client.get(f"{settings.auth_url}/.well-known/jwks.json")
             resp.raise_for_status()
             jwks = resp.json()
     except Exception:
@@ -42,9 +39,7 @@ async def decode_token(token: str, cache: CacheStorageProtocol) -> dict:
 
         key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
         if not key:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Unknown key id")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unknown key id")
 
         if key["kty"] == "oct":
             try:
@@ -52,12 +47,12 @@ async def decode_token(token: str, cache: CacheStorageProtocol) -> dict:
             except Exception as e:
                 logger.error("Bad JWKS key encoding: %s", e)
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid secret encoding")
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid secret encoding"
+                )
         else:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Unsupported key type")
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unsupported key type"
+            )
 
         alg = key.get("alg", "HS256")
 
@@ -69,25 +64,17 @@ async def decode_token(token: str, cache: CacheStorageProtocol) -> dict:
         )
 
     except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token expired")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except JWTError as e:
         logger.warning("JWTError: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except HTTPException:
         raise  # пробрасываем как есть
     except Exception as e:
         logger.exception("Unexpected error in decode_token: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     if payload.get("type") != "access":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not an access token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not an access token")
 
     return payload

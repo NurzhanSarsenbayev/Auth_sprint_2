@@ -1,9 +1,8 @@
 import json
 
+from core.config import settings
 from fastapi import APIRouter
 from jwcrypto import jwk
-
-from core.config import settings
 
 router = APIRouter()
 

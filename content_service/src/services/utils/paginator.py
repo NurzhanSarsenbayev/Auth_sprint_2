@@ -1,14 +1,11 @@
-from typing import Type, TypeVar, List
+from typing import TypeVar
 
 T = TypeVar("T")
 
 
 class Paginator:
     @staticmethod
-    def paginate(items: List[T],
-                 page: int,
-                 size: int,
-                 cls: Type[T]) -> List[T]:
+    def paginate(items: list[T], page: int, size: int, cls: type[T]) -> list[T]:
         """
         Пагинация списка объектов.
 
@@ -27,5 +24,4 @@ class Paginator:
             return page_items
 
         # иначе создаём объекты cls из словарей
-        return [cls(**item) if isinstance(item, dict)
-                else item for item in page_items]
+        return [cls(**item) if isinstance(item, dict) else item for item in page_items]

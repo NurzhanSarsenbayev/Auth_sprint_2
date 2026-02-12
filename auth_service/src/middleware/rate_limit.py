@@ -1,17 +1,15 @@
+import logging
 import re
 import time
 import uuid
-from typing import Iterable, Optional
-
-from fastapi import Request, Response
-from starlette.middleware.base import (BaseHTTPMiddleware,
-                                       RequestResponseEndpoint)
-from starlette.responses import JSONResponse
-from redis.asyncio import Redis
+from collections.abc import Iterable
 
 from core.config import settings
 from core.logging import request_id_ctx
-import logging
+from fastapi import Request, Response
+from redis.asyncio import Redis
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import JSONResponse
 
 
 def _client_ip(request: Request) -> str:
@@ -48,18 +46,18 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app,
-        redis: Optional[Redis] = None,
-        rules: Optional[Iterable[RateRule]] = None,
+        redis: Redis | None = None,
+        rules: Iterable[RateRule] | None = None,
         default_limit: int = None,
         default_window: int = None,
-        whitelist_paths: Optional[Iterable[str]] = None,
+        whitelist_paths: Iterable[str] | None = None,
     ):
         super().__init__(app)
         self.logger = logging.getLogger("app")
 
-        self.redis = redis or Redis(host=settings.redis_host,
-                                    port=settings.redis_port,
-                                    decode_responses=True)
+        self.redis = redis or Redis(
+            host=settings.redis_host, port=settings.redis_port, decode_responses=True
+        )
 
         self.default_limit = default_limit or settings.rate_limit_max_requests
         self.default_window = default_window or settings.rate_limit_window_sec
@@ -73,13 +71,9 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             if r.pattern.match(path):
                 return r
         # дефолт
-        return RateRule(pattern=r".*",
-                        limit=self.default_limit,
-                        window=self.default_window)
+        return RateRule(pattern=r".*", limit=self.default_limit, window=self.default_window)
 
-    async def dispatch(self,
-                       request: Request,
-                       call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # если в тестах — пропускаем без лимитов
         if getattr(settings, "testing", False):
             return await call_next(request)
@@ -111,8 +105,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             # Если Redis недоступен — graceful degradation
             req_id = request_id_ctx.get("-")
-            self.logger.warning(
-                f"[rate] Redis error, skip limiting (req_id={req_id}): {e}")
+            self.logger.warning(f"[rate] Redis error, skip limiting (req_id={req_id}): {e}")
             return await call_next(request)
 
         if count >= rule.limit:

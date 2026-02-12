@@ -1,10 +1,10 @@
+from typing import Any
 from uuid import UUID
-from typing import List, Optional, Dict, Any
 
 from models.genre import Genre
 
 
-def parse_genres_from_agg(resp: dict) -> List[Genre]:
+def parse_genres_from_agg(resp: dict) -> list[Genre]:
     buckets = resp["aggregations"]["unique_genres"]["by_uuid"]["buckets"]
     genres = []
 
@@ -20,9 +20,7 @@ def parse_genres_from_agg(resp: dict) -> List[Genre]:
     return genres
 
 
-def parse_genre_from_hit(
-        hits: List[Dict[str, Any]],
-        genre_uuid: UUID) -> Optional[Genre]:
+def parse_genre_from_hit(hits: list[dict[str, Any]], genre_uuid: UUID) -> Genre | None:
     """Ищет жанр по UUID в результатах ES."""
     if not hits:
         return None
@@ -32,9 +30,7 @@ def parse_genre_from_hit(
     return None
 
 
-def parse_genres_with_filter(
-        hits: List[Dict[str, Any]],
-        query_str: str) -> List[Genre]:
+def parse_genres_with_filter(hits: list[dict[str, Any]], query_str: str) -> list[Genre]:
     """Фильтрует жанры по подстроке (поиск)."""
     unique = {}
     for doc in hits:

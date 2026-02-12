@@ -1,28 +1,25 @@
-from typing import Protocol, Any, Optional
+from typing import Any, Protocol
 
 
 class CacheStorageProtocol(Protocol):
     """Протокол для кэша (Redis)."""
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Получить значение по ключу.
         Возвращает None, если ключа нет.
         """
         ...
 
-    async def set(self,
-                  key: str,
-                  value: Any,
-                  expire: Optional[int] = None) -> None:
+    async def set(self, key: str, value: Any, expire: int | None = None) -> None:
         """Сохранить значение по ключу
-         с возможным временем жизни (expire в секундах)."""
+        с возможным временем жизни (expire в секундах)."""
         ...
 
 
 class SearchStorageProtocol(Protocol):
     """Протокол для поискового хранилища (Elasticsearch)."""
 
-    async def get(self, index: str, id: str) -> Optional[dict]:
+    async def get(self, index: str, id: str) -> dict | None:
         """Получить документ по id."""
         ...
 

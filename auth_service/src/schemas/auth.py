@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
 from typing import TypedDict
+
 from models import User
+from pydantic import BaseModel, EmailStr
 
 
 class LoginRequest(BaseModel):
