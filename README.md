@@ -1,161 +1,99 @@
+# Auth Service
+
+A production-minded authentication service for issuing and validating JWT tokens (RS256) via JWKS, with refresh tokens,
+RBAC, and persistent storage.
+
+This repository is focused on the **Auth Service standalone** path. Other components (if present) are considered
+**optional/demo-only**.
 
 ---
 
-# 🎬 Online Cinema Platform (Sprint 7)
+## Key Features
 
-Микросервисный проект онлайн-кинотеатра:
+### Implemented
+- JWT (RS256) with JWKS endpoint (public key distribution)
+- Access / Refresh token flow
+- Role-based access control (RBAC)
+- PostgreSQL storage
+- Redis (caching / rate limiting depending on configuration)
+- Docker Compose standalone setup
+- Explicit ops commands (migrations, role seeding, superuser creation) via `make`
 
-* **Auth Service** — аутентификация, авторизация, социальные входы (OAuth), rate-limiting, трассировка.
-* **Content Service** — API для фильмов, жанров, персон, поиск. Работает через Elasticsearch + Redis, проверяет JWT от Auth.
-* **Admin Panel** — Django-админка для управления контентом. Интегрирована с Auth (SSO/JWT).
+### Optional (present but not required for standalone)
+- OAuth providers (if enabled/implemented in codebase)
+- Tracing / middleware integrations (if enabled)
+- Additional services from the original monorepo scope
 
-Все сервисы запускаются в `docker-compose`.
+### Planned
+- Strict quality gate: ruff, mypy (runtime strict subset), pre-commit
+- CI matrix: Python 3.10 / 3.11 / 3.12
+- Reproducible demo script + docs/DEMO.md
+- Security narrative: trust boundaries, guarantees, and limitations
 
 ---
-## Standalone Quickstart (Auth Service)
 
-> Current focus: standalone Auth Service (Docker Compose).
-> NOTE: at this stage the container entrypoint still applies migrations / seeds on boot.
-> This will be removed in PR2 (explicit commands only).
+## 60-second Quickstart (Standalone)
 
-### Requirements
-- Docker + Docker Compose v2
-
-### Run
-
+### 1) Configure environment
+Copy sample env:
 ```bash
 cp auth_service/.env.auth.sample auth_service/.env.auth
+````
+
+### 2) Start services
+
+```bash
 make up
 make health
 ```
-Stop
+
+### 3) Initialize database (explicit)
+
 ```bash
+make migrate
+make seed-roles
+```
+
+### 4) Create a superuser (optional)
+
+Superuser is created **only if** `SUPERUSER_PASSWORD` is set in `auth_service/.env.auth`:
+
+```bash
+make create-superuser
+```
+
+### 5) Open API docs
+
+* [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## Operations
+
+Common commands:
+
+```bash
+make ps
+make logs-auth
+make logs-postgres-auth
+make logs-redis
 make down
 ```
-Ports
-Auth API: http://localhost:8000/docs
-
-Postgres: localhost:5433
-
-Redis: localhost:6380
-
----
-## 📂 Архитектура
-
-```
-
-[User] -> [Auth Service] -> issues JWT (RS256)
-       -> [Content Service] -> проверяет JWT (JWKS кэш в Redis, fallback -> guest)
-       -> [Admin Panel] -> работает через Auth (JWT/SSO), управляет БД фильмов
-       
-Infra: Postgres, Redis, Elasticsearch, Jaeger (трассировка)
-
-```
-
-* Все запросы между сервисами сопровождаются `x-request-id`.
-* Трассировка (`OpenTelemetry`) отправляется в **Jaeger**.
-* Если Auth недоступен → Content возвращает пользователя как `guest` (изящная деградация).
 
 ---
 
-## 🚀 Запуск
+## Documentation
 
-### Требования
-
-* Docker + Docker Compose
-* Порты:
-
-  * `8001` — Auth
-  * `8002` — Content
-  * `8003` — Admin Panel
-  * `16686` — Jaeger UI
-
-### Шаги
-
-```bash
-git clone https://github.com/<your_repo>/Auth_sprint_2.git
-cd Auth_sprint_2
-docker compose up --build
-```
-
-Через ~30 секунд сервисы будут доступны:
-
-* Auth: [http://localhost:8001](http://localhost:8001)
-* Content: [http://localhost:8002/api/v1/films](http://localhost:8002/api/v1/films)
-* Admin: [http://localhost:8003/admin](http://localhost:8003/admin)
-* Jaeger UI: [http://localhost:16686](http://localhost:16686)
+* `docs/ARCHITECTURE.md` — system overview and key flows
+* `docs/OPERATIONS.md` — operational guide (runbooks, troubleshooting)
+* `docs/SECURITY.md` — key handling, trust boundaries, security notes
 
 ---
 
-## ⚙️ Переменные окружения
+## Notes
 
-Для каждого сервиса есть свой `.env.example`.  
-Чтобы запустить сервис, скопируйте пример и заполните при необходимости:
+This project aims to be **honest and reproducible**:
 
-Называйте env файлы по схеме env.{service}: env.auth, env.admin и env.content
-
-Тоже самое для тестов: env.test.{service}: env.test.auth, env.test.admin, env.test.content
-
----
-
-## 🔐 OAuth вход
-
-Поддерживаются:
-
-* Google
-* Yandex
-
-Пример:
-
-1. GET `/api/v1/oauth/google/login` → редирект в Google
-2. После авторизации → колбэк `/api/v1/oauth/google/callback`
-3. Пользователь создаётся в БД, выдаются JWT токены.
-4. Можно отвязать: `DELETE /api/v1/oauth/google/unlink`
-
----
-
-## 🧪 Тесты
-
-Для каждого сервиса есть отдельный `docker-compose.test.yml`.
-Запуск тестов (пример для Auth):
-
-```bash
-Content:
-
-docker compose -f content_service/tests/docker-compose.test.content.yml up --build --abort-on-container-exit
-
-Auth:
-
-docker compose -f auth_service/tests/docker-compose.test.auth.yml up --build --abort-on-container-exit
-
-Admin:
-
-docker compose -f admin_panel/docker-compose.test.admin.yml up --build --abort-on-container-exit
-```
-
----
-
-## 📊 Трассировка
-
-В Jaeger UI ([http://localhost:16686](http://localhost:16686)) можно отследить запросы:
-
-* Auth Service (`auth_service`)
-* Content Service (`content_service`)
-* Admin Panel (`admin_service`)
-
-Каждый запрос помечается `x-request-id`.
-
----
-
-## ✨ Фичи проекта
-
-* [x] JWT RS256 + JWKS
-* [x] OAuth вход (Google, Yandex)
-* [x] Rate limiting (Redis sliding window)
-* [x] Partitioned login_history
-* [x] Content API: фильмы, жанры, персоны + глобальный поиск
-* [x] Admin Panel с inline-редактированием
-* [x] Трассировка OpenTelemetry → Jaeger
-* [x] Изящная деградация (guest при падении Auth)
-
----
+* No automatic migrations/seeding on container startup
+* No secrets committed to the repository
+* One canonical standalone run path
