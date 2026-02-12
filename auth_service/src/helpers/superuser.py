@@ -1,4 +1,3 @@
-# helpers/superuser.py
 import os
 import uuid
 from datetime import datetime
@@ -9,8 +8,18 @@ from sqlalchemy.orm import sessionmaker
 from utils.security import hash_password
 
 
-def ensure_superuser(db_url: str):
-    """Создаёт суперпользователя и роль admin, если их нет"""
+def ensure_superuser(db_url: str, password: str | None = None) -> None:
+    """Create admin user + admin role if missing.
+
+    Password priority:
+      1) explicit `password` arg
+      2) SUPERUSER_PASSWORD env var
+    """
+    password = password or os.getenv("SUPERUSER_PASSWORD")
+    if not password:
+        print("SUPERUSER_PASSWORD is not set -> skipping superuser creation")
+        return
+
     engine = create_engine(db_url, echo=False, future=True)
     Session = sessionmaker(bind=engine)
 
@@ -18,11 +27,6 @@ def ensure_superuser(db_url: str):
         user = session.execute(
             select(User).where(User.email == "admin@example.com")
         ).scalar_one_or_none()
-
-        password = os.getenv("SUPERUSER_PASSWORD")
-        if not password:
-            print("SUPERUSER_PASSWORD is not set -> skipping superuser creation")
-            return
 
         hashed = hash_password(password)
 
@@ -59,13 +63,14 @@ def ensure_superuser(db_url: str):
         ).scalar_one_or_none()
 
         if not user_role:
-            user_role = UserRole(
-                id=uuid.uuid4(),
-                user_id=user.user_id,
-                role_id=role.role_id,
-                assigned_at=datetime.utcnow(),
+            session.add(
+                UserRole(
+                    id=uuid.uuid4(),
+                    user_id=user.user_id,
+                    role_id=role.role_id,
+                    assigned_at=datetime.utcnow(),
+                )
             )
-            session.add(user_role)
 
         session.commit()
         print("✅ Superuser ensured")

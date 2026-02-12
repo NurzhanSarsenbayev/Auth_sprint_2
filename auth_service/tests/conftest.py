@@ -1,4 +1,5 @@
 import asyncio
+import os
 import pytest
 import pytest_asyncio
 from helpers.superuser import ensure_superuser
@@ -9,7 +10,7 @@ from sqlalchemy import text
 from main import app
 from db.postgres import make_engine, make_session_factory, Base, get_session
 from db.redis_db import init_redis, close_redis, get_redis
-from core.test_config import test_settings
+from core.config import settings
 from models import User
 from utils.security import hash_password
 
@@ -33,7 +34,7 @@ def event_loop():
 @pytest_asyncio.fixture(scope="session")
 async def engine():
     """Создаём движок и схему БД для тестов"""
-    eng = make_engine(test_settings.database_url)
+    eng = make_engine(settings.database_url)
     async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield eng
@@ -56,8 +57,10 @@ async def clean_db(engine):
             await conn.execute(
                 text(f'TRUNCATE "{table.name}" RESTART IDENTITY CASCADE'))
 
-    # после чистки пересоздаём суперюзера
-    ensure_superuser(test_settings.database_url.replace("+asyncpg", ""))
+    ensure_superuser(
+        settings.database_url.replace("+asyncpg", ""),
+        password=os.getenv("SUPERUSER_PASSWORD", "123"),
+    )
     yield
 
 # ============================================================

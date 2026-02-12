@@ -1,23 +1,37 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Ждём, пока Postgres поднимется
-echo "⏳ Waiting for Postgres..."
-until pg_isready -h test_postgres -p 5432 -U "$TEST_DB_USER"; do
+export JWT_PRIVATE_KEY_PATH="${JWT_PRIVATE_KEY_PATH:-/app/keys/jwtRS256.key}"
+export JWT_PUBLIC_KEY_PATH="${JWT_PUBLIC_KEY_PATH:-/app/keys/jwtRS256.key.pub}"
+
+mkdir -p /app/keys
+if [ ! -f /app/keys/jwtRS256.key ]; then
+  echo "Generating JWT keys for tests..."
+  openssl genrsa -out /app/keys/jwtRS256.key 2048
+  openssl rsa -in /app/keys/jwtRS256.key -pubout -out /app/keys/jwtRS256.key.pub
+fi
+
+echo "[test-entrypoint] Waiting for Postgres..."
+until pg_isready -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}"; do
   sleep 1
 done
-echo "✅ Postgres is up"
+echo "[test-entrypoint] Postgres is ready"
 
-# Применяем миграции
-echo "🚀 Running migrations..."
-alembic -c alembic_test.ini upgrade head
+echo "[test-entrypoint] Waiting for Redis..."
+python - <<'PY'
+import os, socket, time
+host = os.environ.get("REDIS_HOST", "localhost")
+port = int(os.environ.get("REDIS_PORT", "6379"))
+deadline = time.time() + 60
+while time.time() < deadline:
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            print("[test-entrypoint] Redis port is open")
+            break
+    except OSError:
+        time.sleep(1)
+else:
+    raise SystemExit("[test-entrypoint] Redis is not ready in time")
+PY
 
-# (опционально) Чистим БД перед тестами
-# psql -h test_postgres -U postgres -d test_auth_db -c "TRUNCATE TABLE users CASCADE;"
-
-echo "👑 Ensuring superuser exists..."
-python create_superuser.py
-
-# Запускаем тесты
-echo "🧪 Running pytest..."
-pytest -vv --disable-warnings --maxfail=1
+exec "$@"

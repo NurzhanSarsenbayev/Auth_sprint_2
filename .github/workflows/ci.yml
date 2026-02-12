@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
   push:
-    branches: [master]
+    branches: [main, master]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Checkout
@@ -61,19 +61,19 @@ jobs:
         run: |
           cp auth_service/tests/.env.test.auth.example auth_service/tests/.env.test.auth
 
-      - name: Docker compose up (exit on tests)
+      - name: Compose up (infra)
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          docker compose \
-            -f auth_service/tests/docker-compose.test.auth.yml \
-            --project-directory auth_service/tests \
-            up --build --abort-on-container-exit --exit-code-from tests
+          make test-up
 
-      - name: Docker compose down
+      - name: Run tests
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: |
+          make test-run
+
+      - name: Compose down
         if: always()
         run: |
-          docker compose \
-            -f auth_service/tests/docker-compose.test.auth.yml \
-            --project-directory auth_service/tests \
-            down -v --remove-orphans
+          make test-down
