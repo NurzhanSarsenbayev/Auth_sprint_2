@@ -23,7 +23,7 @@ up: init-env
 
 .PHONY: down
 down:
-	$(COMPOSE) down
+	$(COMPOSE) down -v
 
 .PHONY: ps
 ps:
@@ -39,4 +39,19 @@ logs-auth:
 
 .PHONY: health
 health:
-	@curl -fsS http://localhost:8000/openapi.json > /dev/null && echo "OK: http://localhost:8000/docs" || (echo "FAIL: API is not reachable" && exit 1)
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		curl -fsS http://localhost:8000/docs >/dev/null && echo "OK: http://localhost:8000/docs" && exit 0; \
+		sleep 1; \
+	done; \
+	echo "FAIL: API is not reachable"; exit 1
+
+migrate:
+	docker compose exec auth_service alembic upgrade head
+
+seed-roles:
+	docker compose exec auth_service python  seed_roles.py
+
+create-superuser:
+	docker compose exec auth_service python create_superuser.py
+
+bootstrap: up migrate seed-roles health

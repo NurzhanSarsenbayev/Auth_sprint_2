@@ -38,12 +38,19 @@ def create_superuser(db_url: str | None = None):
             select(User).where(User.email == "admin@example.com")
         ).scalar_one_or_none()
 
+        password = os.getenv("SUPERUSER_PASSWORD")
+        if not password:
+            print("SUPERUSER_PASSWORD is not set -> skipping superuser creation")
+            return
+
+        hashed = hash_password(password)
+
         if not user:
             user = User(
                 user_id=uuid.uuid4(),
                 username="admin",
                 email="admin@example.com",
-                hashed_password=hash_password("123"),
+                hashed_password=hashed,
                 is_active=True,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),

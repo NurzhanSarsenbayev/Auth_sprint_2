@@ -83,3 +83,14 @@ taskfull
 media/
 staticfiles/
 admin_panel/staticfiles/
+
+# secrets / keys
+*.key
+*.pem
+*.p12
+*.pfx
+
+# keep keys folder structure in repo, but never commit keys
+auth_service/keys/*
+!auth_service/keys/README.md
+!auth_service/keys/.gitkeep
