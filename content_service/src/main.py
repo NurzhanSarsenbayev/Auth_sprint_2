@@ -1,25 +1,22 @@
 import asyncio
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 from logging.config import dictConfig
 
+from api.v1 import films, genres, persons, ping, search
+from core.config import settings
+from core.logger import LOGGING
+from core.telemetry import instrument_app, setup_tracing, shutdown_tracing
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from redis.asyncio import Redis
-
-from core.config import settings
-from core.telemetry import setup_tracing, instrument_app, shutdown_tracing
-from core.logger import LOGGING
-
-from api.v1 import films, genres, persons, search, ping
-from services.cache_builder import wait_for_elastic
-from middleware.request_id import RequestIDMiddleware
 from middleware.rate_limit import RateLimitMiddleware
+from middleware.request_id import RequestIDMiddleware
+from redis.asyncio import Redis
+from services.cache_builder import wait_for_elastic
 
 # 👇 добавляем импорт для JWKS
 from utils.jwt import get_jwks
-
 
 # --- Логирование ---
 dictConfig(LOGGING)
@@ -41,9 +38,7 @@ async def jwks_refresher(cache: Redis, interval: int = 600):
         except Exception as e:
             logger.error(f"❌ Ошибка обновления JWKS: {e}")
         finally:
-            logger.debug(
-                "⏳ Следующее обновление"
-                " JWKS через %s секунд", interval)
+            logger.debug("⏳ Следующее обновление JWKS через %s секунд", interval)
             await asyncio.sleep(interval)
 
 
@@ -52,10 +47,7 @@ async def lifespan(app: FastAPI):
     # --- startup ---
     logger.info("🚀 Запуск Content Service (lifespan.startup)")
 
-    app.state.redis_storage = Redis(
-        host=settings.redis_host,
-        port=settings.redis_port
-    )
+    app.state.redis_storage = Redis(host=settings.redis_host, port=settings.redis_port)
     app.state.es_storage = AsyncElasticsearch(
         hosts=[f"http://{settings.elastic_host}:{settings.elastic_port}"]
     )
@@ -64,8 +56,7 @@ async def lifespan(app: FastAPI):
     await wait_for_elastic(app.state.es_storage, timeout=60)
 
     # Запускаем фоновый обновитель JWKS
-    task = asyncio.create_task(
-        jwks_refresher(app.state.redis_storage, interval=600))
+    task = asyncio.create_task(jwks_refresher(app.state.redis_storage, interval=600))
     app.state.jwks_refresher_task = task
     logger.info("✅ JWKS refresher task started")
 
@@ -86,6 +77,7 @@ async def lifespan(app: FastAPI):
     shutdown_tracing()
     logger.info("✅ OpenTelemetry трассировка корректно остановлена")
 
+
 # --- Сначала трейсинг ---
 if settings.enable_tracer:
     setup_tracing(settings.otel_service_name)
@@ -97,10 +89,7 @@ app = FastAPI(
     title="Read-only API для онлайн-кинотеатра",
     openapi_url="/api/openapi",
     default_response_class=ORJSONResponse,
-    description="Информация о фильмах,"
-                " жанрах и людях,"
-                " участвовавших"
-                " в создании произведения",
+    description="Информация о фильмах, жанрах и людях, участвовавших в создании произведения",
     version="1.0.0",
     lifespan=lifespan,
 )

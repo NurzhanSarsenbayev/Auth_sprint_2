@@ -1,19 +1,17 @@
-from fastapi import APIRouter, Depends, Response, Request, Cookie
-from fastapi.security import OAuth2PasswordRequestForm
 from http import HTTPStatus
-from jwcrypto import jwk
 
 from core.config import settings
+from fastapi import APIRouter, Cookie, Depends, Request, Response
+from fastapi.security import OAuth2PasswordRequestForm
+from jwcrypto import jwk
+from schemas.auth import LoginRequest, TokenPair
 from services.auth import AuthService
-from schemas.auth import TokenPair, LoginRequest
 from utils.dependencies import get_auth_service
 
 router = APIRouter()
 
 
-@router.post("/login",
-             response_model=TokenPair,
-             status_code=HTTPStatus.OK)
+@router.post("/login", response_model=TokenPair, status_code=HTTPStatus.OK)
 async def login_oauth2(
     request: Request,
     response: Response,
@@ -21,25 +19,19 @@ async def login_oauth2(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     return await auth_service.login_with_form(
-        form_data.username,
-        form_data.password,
-        request, response)
+        form_data.username, form_data.password, request, response
+    )
 
 
-@router.post("/login-json",
-             response_model=TokenPair,
-             status_code=HTTPStatus.OK)
+@router.post("/login-json", response_model=TokenPair, status_code=HTTPStatus.OK)
 async def login_json(
     data: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    return await auth_service.login_with_json(
-        data.username, data.password)
+    return await auth_service.login_with_json(data.username, data.password)
 
 
-@router.post("/refresh",
-             response_model=TokenPair,
-             status_code=HTTPStatus.OK)
+@router.post("/refresh", response_model=TokenPair, status_code=HTTPStatus.OK)
 async def refresh_tokens(
     refresh_token: str | None = Cookie(default=None),
     auth_service: AuthService = Depends(get_auth_service),

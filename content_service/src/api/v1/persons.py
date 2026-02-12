@@ -1,21 +1,19 @@
+from http import HTTPStatus
 from uuid import UUID
 
+from dependencies import get_person_service
 from fastapi import APIRouter, Depends, HTTPException, Query
-from http import HTTPStatus
-from typing import List
-
 from models.person import Person
 from services.persons.persons_service import PersonService
-from dependencies import get_person_service
+
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Person])
+@router.get("/", response_model=list[Person])
 async def persons_list(
-        page: int = Query(1, ge=1, description="Номер страницы"),
-        size: int = Query(10, ge=1, le=100,
-                          description="Количество персон на странице"),
-        person_service: PersonService = Depends(get_person_service)
+    page: int = Query(1, ge=1, description="Номер страницы"),
+    size: int = Query(10, ge=1, le=100, description="Количество персон на странице"),
+    person_service: PersonService = Depends(get_person_service),
 ):
     """
     Получение списка всех персон с пагинацией.
@@ -34,13 +32,9 @@ async def persons_list(
     return await person_service.list_persons(size=size, page=page)
 
 
-@router.get("/search", response_model=List[Person])
+@router.get("/search", response_model=list[Person])
 async def search_persons(
-    query: str = Query(
-        ...,
-        min_length=1,
-        description="Поисковая строка для поиска персон"
-    ),
+    query: str = Query(..., min_length=1, description="Поисковая строка для поиска персон"),
     person_service: PersonService = Depends(get_person_service),
 ):
     """
@@ -61,8 +55,7 @@ async def search_persons(
 
 @router.get("/{person_id}", response_model=Person)
 async def person_details(
-    person_id: UUID,
-    person_service: PersonService = Depends(get_person_service)
+    person_id: UUID, person_service: PersonService = Depends(get_person_service)
 ):
     """
     Получение информации о конкретной персоне по UUID.
@@ -82,8 +75,5 @@ async def person_details(
     """
     person = await person_service.get_person_by_id(str(person_id))
     if not person:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="person not found"
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="person not found")
     return person

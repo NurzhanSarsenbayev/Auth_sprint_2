@@ -10,18 +10,11 @@ def all_genres_query(size: int = 1000) -> dict:
                 "aggs": {
                     "by_uuid": {
                         "terms": {"field": "genres.uuid", "size": size},
-                        "aggs": {
-                            "name": {
-                                "top_hits": {
-                                    "_source": ["genres.name"],
-                                    "size": 1
-                                }
-                            }
-                        }
+                        "aggs": {"name": {"top_hits": {"_source": ["genres.name"], "size": 1}}},
                     }
-                }
+                },
             }
-        }
+        },
     }
 
 

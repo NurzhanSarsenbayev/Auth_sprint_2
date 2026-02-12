@@ -1,19 +1,15 @@
 # admin_panel/sso/views.py
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.core.cache import cache
-from django.http import (HttpRequest,
-                         HttpResponse,
-                         HttpResponseRedirect,
-                         JsonResponse)
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-
 from jose import jwk, jwt
 from jose.utils import base64url_decode
 
@@ -69,13 +65,11 @@ def _verify_rs256(token: str, jwks: dict) -> dict:
         raise ValueError(f"Unexpected alg: {alg}")
 
     # подбираем ключ по kid
-    key_dict = next((
-        k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
+    key_dict = next((k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
     if not key_dict:
         # один раз обновляем JWKS и пробуем снова (ротация ключей)
         jwks = _get_jwks(force=True)
-        key_dict = next((
-            k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
+        key_dict = next((k for k in jwks.get("keys", []) if k.get("kid") == kid), None)
         if not key_dict:
             raise ValueError(f"kid {kid} not found in JWKS")
 
@@ -87,18 +81,16 @@ def _verify_rs256(token: str, jwks: dict) -> dict:
     except ValueError:
         raise ValueError("Malformed JWT")
 
-    signing_input = f"{h_b64}.{p_b64}".encode("utf-8")
+    signing_input = f"{h_b64}.{p_b64}".encode()
     signature = base64url_decode(s_b64.encode("utf-8"))
 
     if not rsa_key.verify(signing_input, signature):
         raise ValueError("Invalid JWT signature")
 
-    claims = json.loads(
-        base64url_decode(p_b64.encode("utf-8")).decode("utf-8")
-    )
+    claims = json.loads(base64url_decode(p_b64.encode("utf-8")).decode("utf-8"))
 
     # базовая валидация exp (можешь добавить nbf/iss при желании)
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     exp = float(claims.get("exp", 0))
     if now >= exp:
         raise ValueError("JWT expired")
@@ -133,19 +125,13 @@ def jwt_login(request: HttpRequest) -> HttpResponse:
     sub = claims.get("sub")
     email = claims.get("email") or ""
     if not _is_allowed_admin(email):
-        return JsonResponse(
-            {"detail": "Forbidden (email not allowed)"},
-            status=403
-        )
+        return JsonResponse({"detail": "Forbidden (email not allowed)"}, status=403)
 
     User = get_user_model()
     # username берём из email, fallback — sub
     username = email or sub
     if not username:
-        return JsonResponse(
-            {"detail": "Token missing subject/email"},
-            status=400
-        )
+        return JsonResponse({"detail": "Token missing subject/email"}, status=400)
 
     user, created = User.objects.get_or_create(
         username=username,

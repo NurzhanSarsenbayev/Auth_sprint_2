@@ -27,3 +27,5 @@ opentelemetry-instrumentation-asgi
 opentelemetry-instrumentation-redis
 opentelemetry-instrumentation-httpx
 opentelemetry-instrumentation-sqlalchemy
+ruff
+mypy

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
 from dependencies import get_current_principal
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 

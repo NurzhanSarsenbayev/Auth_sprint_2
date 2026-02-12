@@ -1,5 +1,11 @@
 COMPOSE := docker compose
 ENV_FILE := auth_service/.env.auth
+RUFF_PATHS := auth_service/src auth_service/*.py
+MYPY_PATHS := \
+  auth_service/src/core \
+  auth_service/src/db \
+  auth_service/src/utils/jwt.py \
+  auth_service/src/utils/security.py
 
 .PHONY: help
 help:
@@ -55,3 +61,14 @@ create-superuser:
 	$(COMPOSE) exec auth_service python create_superuser.py
 
 bootstrap: up migrate seed-roles health
+
+lint:
+	ruff check $(RUFF_PATHS)
+
+fmt:
+	ruff format $(RUFF_PATHS)
+
+mypy:
+	MYPYPATH=auth_service/src mypy $(MYPY_PATHS)
+
+check: lint mypy

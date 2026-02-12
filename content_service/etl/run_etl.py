@@ -14,18 +14,12 @@ def main():
 
     # --- Трансформация данных ---
     print("🔄 Start transformation...")
-    subprocess.run(
-        ["python", "etl/transform_old_to_new_data.py"],
-        check=True
-    )
+    subprocess.run(["python", "etl/transform_old_to_new_data.py"], check=True)
     print("✅ Transformation finished.")
 
     # --- Загрузка данных в Elasticsearch ---
     print("📤 Start loading to Elasticsearch...")
-    subprocess.run(
-        ["python", "etl/loader.py"],
-        check=True
-    )
+    subprocess.run(["python", "etl/loader.py"], check=True)
     print("✅ Loading finished.")
 
 

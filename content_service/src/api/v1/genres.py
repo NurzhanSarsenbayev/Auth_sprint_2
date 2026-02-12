@@ -1,16 +1,15 @@
+from http import HTTPStatus
 from uuid import UUID
 
+from dependencies import get_genre_service
 from fastapi import APIRouter, Depends, HTTPException, Query
-from http import HTTPStatus
-from typing import List
-
 from models.genre import Genre
 from services.genres.genres_service import GenreService
-from dependencies import get_genre_service
+
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Genre])
+@router.get("/", response_model=list[Genre])
 async def genres_list(
     page: int = Query(1, ge=1, description="Номер страницы"),
     size: int = Query(10, ge=1, description="Количество жанров на странице"),
@@ -34,13 +33,9 @@ async def genres_list(
     return await genre_service.list_genres(size=size, page=page)
 
 
-@router.get("/search", response_model=List[Genre])
+@router.get("/search", response_model=list[Genre])
 async def search_genres(
-    query: str = Query(
-        ...,
-        min_length=1,
-        description="Поисковый запрос для жанров"
-    ),
+    query: str = Query(..., min_length=1, description="Поисковый запрос для жанров"),
     genre_service: GenreService = Depends(get_genre_service),
 ):
     """
@@ -61,10 +56,7 @@ async def search_genres(
 
 
 @router.get("/{genre_id}", response_model=Genre)
-async def genre_details(
-    genre_id: UUID,
-    genre_service: GenreService = Depends(get_genre_service)
-):
+async def genre_details(genre_id: UUID, genre_service: GenreService = Depends(get_genre_service)):
     """
     Получение информации о жанре по его UUID.
 
@@ -83,6 +75,5 @@ async def genre_details(
     """
     genre = await genre_service.get_genre_by_id(genre_id)
     if not genre:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail="genre not found")
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="genre not found")
     return genre

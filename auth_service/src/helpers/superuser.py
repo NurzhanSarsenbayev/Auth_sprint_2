@@ -2,10 +2,10 @@
 import os
 import uuid
 from datetime import datetime
+
+from models import Role, User, UserRole
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-
-from models import User, Role, UserRole
 from utils.security import hash_password
 
 
@@ -39,9 +39,7 @@ def ensure_superuser(db_url: str):
             session.add(user)
             session.flush()
 
-        role = session.execute(
-            select(Role).where(Role.name == "admin")
-        ).scalar_one_or_none()
+        role = session.execute(select(Role).where(Role.name == "admin")).scalar_one_or_none()
 
         if not role:
             role = Role(

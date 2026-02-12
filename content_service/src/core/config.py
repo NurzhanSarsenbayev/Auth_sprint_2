@@ -1,9 +1,9 @@
 import os
 from logging import config as logging_config
-from pydantic import Field
-from pydantic_settings import BaseSettings
 
 from core.logger import LOGGING
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -28,16 +28,15 @@ class Settings(BaseSettings):
     enable_tracer: bool = Field(default=True, env="ENABLE_TRACER")
     otel_service_name: str = Field(default="content_service", env="OTEL_SERVICE_NAME")
     otel_exporter_otlp_endpoint: str = Field(
-        default="http://jaeger:4318/v1/traces",
-        env="OTEL_EXPORTER_OTLP_ENDPOINT"
+        default="http://jaeger:4318/v1/traces", env="OTEL_EXPORTER_OTLP_ENDPOINT"
     )
     otel_sampling_ratio: float = Field(default=1.0, env="OTEL_SAMPLING_RATIO")
     environment: str = Field(default="dev", env="ENVIRONMENT")
 
 
 class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    env_file = ".env"
+    env_file_encoding = "utf-8"
 
 
 # Применяем настройки логирования

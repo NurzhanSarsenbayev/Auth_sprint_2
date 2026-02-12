@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+
 class OAuthCallbackResponse(BaseModel):
     user_id: str
     email: str
