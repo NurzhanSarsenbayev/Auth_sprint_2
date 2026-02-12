@@ -38,7 +38,7 @@ This repository is focused on the **Auth Service standalone** path. Other compon
 Copy sample env:
 ```bash
 cp auth_service/.env.auth.sample auth_service/.env.auth
-````
+```
 
 ### 2) Start services
 
