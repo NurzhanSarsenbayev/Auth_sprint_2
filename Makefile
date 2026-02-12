@@ -46,12 +46,12 @@ health:
 	echo "FAIL: API is not reachable"; exit 1
 
 migrate:
-	docker compose exec auth_service alembic upgrade head
+	$(COMPOSE) exec auth_service alembic upgrade head
 
 seed-roles:
-	docker compose exec auth_service python  seed_roles.py
+	$(COMPOSE) exec auth_service python seed_roles.py
 
 create-superuser:
-	docker compose exec auth_service python create_superuser.py
+	$(COMPOSE) exec auth_service python create_superuser.py
 
 bootstrap: up migrate seed-roles health
