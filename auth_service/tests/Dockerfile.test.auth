@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     postgresql-client \
     netcat-openbsd \
+    openssl \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PIP_CACHE_DIR=/root/.cache/pip
