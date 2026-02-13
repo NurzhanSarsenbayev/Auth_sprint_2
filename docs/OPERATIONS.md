@@ -4,7 +4,7 @@
 ### 1) Configure environment
 ```bash
 cp auth_service/.env.auth.sample auth_service/.env.auth
-````
+```
 
 ### 2) Start services
 

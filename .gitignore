@@ -93,6 +93,5 @@ admin_panel/staticfiles/
 # keep keys folder structure in repo, but never commit keys
 auth_service/keys/*
 !auth_service/keys/README.md
-!auth_service/keys/.gitkeep
 
 cyrr_report.txt

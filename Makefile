@@ -46,6 +46,12 @@ logs:
 logs-auth:
 	$(COMPOSE) logs -f --tail=200 auth_service
 
+logs-postgres-auth:
+	$(COMPOSE) logs -f --tail=200 postgres_auth
+
+logs-redis:
+	$(COMPOSE) logs -f --tail=200 redis
+
 health:
 	@for i in 1 2 3 4 5 6 7 8 9 10; do \
 		curl -fsS http://localhost:8000/docs >/dev/null && echo "OK: http://localhost:8000/docs" && exit 0; \
