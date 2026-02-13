@@ -26,7 +26,8 @@ This repository is focused on the **Auth Service standalone** path. Other compon
 
 ### Planned
 - Strict quality gate: ruff, mypy (runtime strict subset), pre-commit
-- CI matrix: Python 3.10 / 3.11 / 3.12
+- Runtime image: **Python 3.11 (Dockerfile)**
+- CI test matrix: **3.11 / 3.12** (tests container)
 - Reproducible demo script + docs/DEMO.md
 - Security narrative: trust boundaries, guarantees, and limitations
 
